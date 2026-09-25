@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#02020a">
+<title>Our Little Universe ✦</title>
+
+<style>
+/* =====================================================
+   OUR LITTLE UNIVERSE 2.0
+   Single-file / iPhone / Kodex version
+===================================================== */
+
+:root {
+    --bg: #02020a;
+    --purple: #a58cff;
+    --purple-soft: #7562d9;
+    --white: #f7f4ff;
+    --muted: #9994aa;
+    --glass: rgba(255,255,255,.055);
+    --border: rgba(255,255,255,.12);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+}
+
+button {
+    font-family: inherit;
+}
+
+
+/* =====================================================
+   INTRO
+===================================================== */
+
+#intro {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 50% 45%,
+            rgba(105,80,220,.22),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 20% 80%,
+            rgba(45,80,180,.12),
+            transparent 30%
+        ),
+        #02020a;
+
+    transition:
+        opacity 1.5s ease,
+        transform 1.5s ease;
+}
+
+.intro-stars {
+    position: absolute;
+    inset: 0;
+}
+
+.intro-stars span {
+    position: absolute;
+
+    width: 2px;
+    height: 2px;
+
+    background: white;
+    border-radius: 50%;
+
+    box-shadow: 0 0 8px white;
+
+    animation: introTwinkle 3s infinite alternate;
+}
+
+@keyframes introTwinkle {
+    from {
+        opacity: .15;
+    }
+
+    to {
+        opacity: .9;
+    }
+}
+
+.intro-content {
+    position: relative;
+    z-index: 5;
+
+    width: 90%;
+    max-width: 650px;
+}
+
+.eyebrow {
+    color: #777286;
+
+    font-size: 9px;
+
+    letter-spacing: 4px;
+
+    text-transform: uppercase;
+}
+
+.intro-title {
+    margin-top: 25px;
+
+    font-family: Georgia, "Times New Roman", serif;
+
+    font-weight: 400;
+
+    font-size: clamp(62px, 17vw, 120px);
+
+    line-height: .78;
+
+    letter-spacing: -5px;
+}
+
+.intro-title span {
+    color: #ad9cff;
+    font-style: italic;
+
+    text-shadow:
+        0 0 30px rgba(140,110,255,.35);
+}
+
+.intro-text {
+    margin-top: 40px;
+
+    color: #aaa6b7;
+
+    font-family: Georgia, serif;
+
+    font-size: 18px;
+
+    line-height: 1.7;
+}
+
+.enter-button {
+    margin-top: 38px;
+
+    padding: 15px 25px;
+
+    color: white;
+
+    background: rgba(130,100,255,.08);
+
+    border: 1px solid rgba(170,150,255,.4);
+
+    border-radius: 100px;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 0 30px rgba(100,80,255,.08);
+
+    transition: .35s ease;
+}
+
+.enter-button:active {
+    transform: scale(.94);
+    background: rgba(130,100,255,.2);
+}
+
+
+/* =====================================================
+   MAIN UNIVERSE
+===================================================== */
+
+#universe {
+    min-height: 100vh;
+
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 50% 25%,
+            rgba(85,65,170,.14),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 10% 70%,
+            rgba(40,70,160,.08),
+            transparent 30%
+        ),
+        #02020a;
+}
+
+.hidden {
+    display: none;
+}
+
+
+/* =====================================================
+   STARFIELD
+===================================================== */
+
+#starfield {
+    position: fixed;
+    inset: 0;
+
+    z-index: 0;
+
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+
+    border-radius: 50%;
+
+    background: white;
+
+    box-shadow:
+        0 0 6px white;
+
+    animation:
+        twinkle var(--speed) ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+    from {
+        opacity: .1;
+        transform: scale(.7);
+    }
+
+    to {
+        opacity: .9;
+        transform: scale(1.3);
+    }
+}
+
+
+/* =====================================================
+   SHOOTING STARS
+===================================================== */
+
+.shooting-star {
+    position: fixed;
+
+    width: 120px;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,.95)
+        );
+
+    transform: rotate(-35deg);
+
+    pointer-events: none;
+
+    z-index: 2;
+
+    animation: shoot 1.5s linear forwards;
+}
+
+@keyframes shoot {
+    0% {
+        opacity: 0;
+        transform:
+            translate(0,0)
+            rotate(-35deg);
+    }
+
+    15% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform:
+            translate(-450px,300px)
+            rotate(-35deg);
+    }
+}
+
+
+/* =====================================================
+   NEBULA
+===================================================== */
+
+.nebula {
+    position: fixed;
+
+    width: 450px;
+    height: 450px;
+
+    border-radius: 50%;
+
+    filter: blur(100px);
+
+    opacity: .07;
+
+    pointer-events: none;
+
+    z-index: 1;
+}
+
+.nebula-one {
+    left: -180px;
+    top: 20%;
+
+    background: #7555ff;
+}
+
+.nebula-two {
+    right: -180px;
+    bottom: 10%;
+
+    background: #466fff;
+}
+
+
+/* =====================================================
+   MOON
+===================================================== */
+
+.moon {
+    position: absolute;
+
+    top: 35px;
+    right: 25px;
+
+    width: 52px;
+    height: 52px;
+
+    border-radius: 50%;
+
+    background: #f0edff;
+
+    box-shadow:
+        0 0 20px rgba(255,255,255,.4),
+        0 0 80px rgba(150,130,255,.15);
+
+    opacity: .85;
+
+    z-index: 3;
+}
+
+.moon::after {
+    content: "";
+
+    position: absolute;
+
+    width: 52px;
+    height: 52px;
+
+    border-radius: 50%;
+
+    background: #02020a;
+
+    left: 14px;
+    top: -6px;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.header {
+    position: relative;
+
+    z-index: 5;
+
+    text-align: center;
+
+    padding: 80px 20px 0;
+}
+
+.header-small {
+    color: #777286;
+
+    font-size: 9px;
+
+    letter-spacing: 4px;
+
+    text-transform: uppercase;
+}
+
+.header h2 {
+    margin-top: 14px;
+
+    font-family: Georgia, serif;
+
+    font-size: clamp(42px, 10vw, 75px);
+
+    font-weight: 400;
+
+    line-height: .95;
+}
+
+.header p {
+    margin-top: 15px;
+
+    color: #777286;
+
+    font-size: 12px;
+}
+
+
+/* =====================================================
+   CONSTELLATION
+===================================================== */
+
+.constellation {
+    position: relative;
+
+    width: 94%;
+    max-width: 700px;
+
+    height: 470px;
+
+    margin: 25px auto 0;
+
+    z-index: 5;
+}
+
+
+/* =====================================================
+   LINES
+===================================================== */
+
+.constellation-line {
+    position: absolute;
+
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(160,140,255,.45),
+            transparent
+        );
+
+    opacity: .35;
+
+    transform-origin: left center;
+
+    transition:
+        opacity 1s ease,
+        box-shadow 1s ease;
+}
+
+.line-one {
+    width: 190px;
+    left: 12%;
+    top: 48%;
+    transform: rotate(-35deg);
+}
+
+.line-two {
+    width: 200px;
+    left: 29%;
+    top: 25%;
+    transform: rotate(35deg);
+}
+
+.line-three {
+    width: 190px;
+    left: 50%;
+    top: 50%;
+    transform: rotate(-30deg);
+}
+
+.line-four {
+    width: 180px;
+    left: 69%;
+    top: 29%;
+    transform: rotate(25deg);
+}
+
+
+/* =====================================================
+   MEMORY STARS
+===================================================== */
+
+.memory-star {
+    position: absolute;
+
+    border: none;
+
+    background: transparent;
+
+    color: white;
+
+    padding: 18px;
+
+    font-size: 24px;
+
+    cursor: pointer;
+
+    z-index: 10;
+
+    -webkit-tap-highlight-color: transparent;
+
+    text-shadow:
+        0 0 7px white,
+        0 0 20px #8870ff,
+        0 0 45px #6248ff;
+
+    animation:
+        starFloat 4s ease-in-out infinite;
+
+    transition: .35s ease;
+}
+
+.memory-star:active {
+    transform: scale(1.5);
+}
+
+.memory-star.found {
+    color: #c8bcff;
+
+    text-shadow:
+        0 0 10px white,
+        0 0 35px #a18cff,
+        0 0 70px #755aff;
+}
+
+.star-one {
+    left: 4%;
+    top: 45%;
+}
+
+.star-two {
+    left: 25%;
+    top: 18%;
+    animation-delay: -1s;
+}
+
+.star-three {
+    left: 46%;
+    top: 48%;
+    animation-delay: -2s;
+}
+
+.star-four {
+    left: 67%;
+    top: 20%;
+    animation-delay: -3s;
+}
+
+.star-five {
+    left: 82%;
+    top: 50%;
+    animation-delay: -1.5s;
+}
+
+.star-six {
+    left: 43%;
+    top: 78%;
+    opacity: .55;
+    animation-delay: -2.5s;
+}
+
+@keyframes starFloat {
+    0%,100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-9px);
+    }
+}
+
+
+/* =====================================================
+   INSTRUCTIONS
+===================================================== */
+
+.instructions {
+    position: relative;
+
+    z-index: 5;
+
+    text-align: center;
+
+    color: #666274;
+
+    font-size: 9px;
+
+    letter-spacing: 3px;
+
+    text-transform: uppercase;
+}
+
+
+/* =====================================================
+   PROGRESS
+===================================================== */
+
+.progress {
+    position: relative;
+
+    z-index: 5;
+
+    width: 80%;
+    max-width: 360px;
+
+    margin: 30px auto 90px;
+}
+
+.progress-info {
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #686474;
+
+    font-size: 9px;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+
+    margin-bottom: 8px;
+}
+
+.progress-bar {
+    height: 2px;
+
+    background: rgba(255,255,255,.08);
+}
+
+.progress-fill {
+    width: 0%;
+
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #715aff,
+            #c0b5ff
+        );
+
+    box-shadow: 0 0 12px #806aff;
+
+    transition: width 1s ease;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+#modal {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 5000;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0,0,0,.78);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition: .4s ease;
+}
+
+#modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 460px;
+
+    position: relative;
+
+    padding: 48px 27px;
+
+    text-align: center;
+
+    border: 1px solid var(--border);
+
+    border-radius: 25px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,.08),
+            rgba(255,255,255,.025)
+        );
+
+    box-shadow:
+        0 30px 100px rgba(0,0,0,.65),
+        0 0 80px rgba(100,80,255,.08);
+
+    transform:
+        translateY(25px)
+        scale(.95);
+
+    transition: .5s ease;
+}
+
+#modal.active .modal-card {
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+.close {
+    position: absolute;
+
+    top: 12px;
+    right: 18px;
+
+    border: none;
+
+    background: transparent;
+
+    color: #777;
+
+    font-size: 28px;
+
+    cursor: pointer;
+}
+
+.modal-star {
+    color: #a38eff;
+
+    font-size: 40px;
+
+    text-shadow:
+        0 0 20px #806aff,
+        0 0 55px #604aff;
+}
+
+.modal-label {
+    margin-top: 20px;
+
+    color: #777286;
+
+    font-size: 9px;
+
+    letter-spacing: 3px;
+}
+
+.modal-title {
+    margin-top: 13px;
+
+    font-family: Georgia, serif;
+
+    font-size: 40px;
+
+    font-weight: 400;
+}
+
+.modal-text {
+    margin-top: 22px;
+
+    color: #aaa6b8;
+
+    font-family: Georgia, serif;
+
+    font-size: 17px;
+
+    line-height: 1.8;
+}
+
+.modal-divider {
+    width: 55px;
+
+    height: 1px;
+
+    margin: 28px auto 0;
+
+    background: rgba(170,150,255,.4);
+}
+
+
+/* =====================================================
+   FINAL SECTION
+===================================================== */
+
+#final {
+    min-height: 100vh;
+
+    position: relative;
+
+    z-index: 5;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    text-align: center;
+
+    padding: 30px;
+
+    opacity: .18;
+
+    transform: translateY(15px);
+
+    transition:
+        opacity 1.5s ease,
+        transform 1.5s ease;
+}
+
+#final.unlocked {
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+.final-small {
+    color: #777286;
+
+    font-size: 9px;
+
+    letter-spacing: 4px;
+}
+
+#final h2 {
+    margin-top: 20px;
+
+    font-family: Georgia, serif;
+
+    font-size: clamp(50px, 13vw, 95px);
+
+    line-height: .9;
+
+    font-weight: 400;
+}
+
+#final h2 span {
+    color: #a795ff;
+
+    font-style: italic;
+
+    text-shadow:
+        0 0 30px rgba(130,100,255,.2);
+}
+
+#final p {
+    max-width: 430px;
+
+    margin-top: 27px;
+
+    color: #9994a8;
+
+    font-family: Georgia, serif;
+
+    font-size: 18px;
+
+    line-height: 1.7;
+}
+
+.final-button {
+    margin-top: 32px;
+
+    padding: 15px 24px;
+
+    border-radius: 100px;
+
+    border: 1px solid rgba(170,150,255,.4);
+
+    color: white;
+
+    background: rgba(130,100,255,.08);
+
+    cursor: pointer;
+
+    transition: .3s ease;
+}
+
+.final-button:active {
+    transform: scale(.94);
+}
+
+
+/* =====================================================
+   FINAL MESSAGE
+===================================================== */
+
+#final-message {
+    min-height: 100vh;
+
+    position: relative;
+
+    z-index: 5;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 30px;
+
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(85,65,180,.22),
+            transparent 38%
+        ),
+        #02020a;
+}
+
+.final-content {
+    animation: finalAppear 2s ease;
+}
+
+.final-name {
+    font-family: Georgia, serif;
+
+    font-size: clamp(55px, 16vw, 125px);
+
+    letter-spacing: 12px;
+
+    color: white;
+
+    text-shadow:
+        0 0 10px white,
+        0 0 40px #8b73ff,
+        0 0 100px #624aff;
+}
+
+.final-divider {
+    width: 75px;
+
+    height: 1px;
+
+    margin: 27px auto;
+
+    background: rgba(175,155,255,.5);
+}
+
+.final-text {
+    color: #aaa6b8;
+
+    font-family: Georgia, serif;
+
+    font-size: 21px;
+
+    line-height: 1.7;
+}
+
+.final-star {
+    display: block;
+
+    margin: 30px;
+
+    color: #a795ff;
+
+    font-size: 22px;
+
+    animation: pulse 2s infinite;
+}
+
+.final-caption {
+    color: #656171;
+
+    font-size: 9px;
+
+    letter-spacing: 3px;
+
+    text-transform: uppercase;
+}
+
+@keyframes pulse {
+    0%,100% {
+        opacity: .5;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.35);
+    }
+}
+
+@keyframes finalAppear {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .header {
+        padding-top: 75px;
+    }
+
+    .constellation {
+        height: 430px;
+    }
+
+    .memory-star {
+        font-size: 21px;
+        padding: 16px;
+    }
+
+    .modal-card {
+        padding: 45px 24px;
+    }
+
+    .modal-title {
+        font-size: 35px;
+    }
+
+    .final-name {
+        letter-spacing: 7px;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     INTRO
+===================================================== -->
+
+<section id="intro">
+
+    <div class="intro-stars" id="introStars"></div>
+
+    <div class="intro-content">
+
+        <div class="eyebrow">
+            A LITTLE SOMETHING FOR YOU
+        </div>
+
+        <h1 class="intro-title">
+            Our Little<br>
+            <span>Universe</span>
+        </h1>
+
+        <p class="intro-text">
+            There are billions of stars in the universe.
+            <br>
+            Somehow, I found you.
+        </p>
+
+        <button
+            class="enter-button"
+            onclick="enterUniverse()">
+
+            Enter our universe ✦
+
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     UNIVERSE
+===================================================== -->
+
+<main id="universe" class="hidden">
+
+    <div id="starfield"></div>
+
+    <div class="nebula nebula-one"></div>
+    <div class="nebula nebula-two"></div>
+
+    <div class="moon"></div>
+
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div class="header-small">
+            WELCOME TO
+        </div>
+
+        <h2>
+            Our Little Universe
+        </h2>
+
+        <p>
+            Every star holds a little piece of our story.
+        </p>
+
+    </header>
+
+
+    <!-- =================================================
+         CONSTELLATION
+    ================================================== -->
+
+    <section class="constellation">
+
+        <div class="constellation-line line-one"></div>
+        <div class="constellation-line line-two"></div>
+        <div class="constellation-line line-three"></div>
+        <div class="constellation-line line-four"></div>
+
+
+        <!-- 1 -->
+
+        <button
+            class="memory-star star-one"
+            onclick="openMemory(
+                0,
+                'The Beginning',
+                'When we first started talking, I never really thought we’d get this far. But here we are.'
+            )">
+
+            ✦
+
+        </button>
+
+
+        <!-- 2 -->
+
+        <button
+            class="memory-star star-two"
+            onclick="openMemory(
+                1,
+                'That Day',
+                'On the first day, I didn’t really feel anything. But that other day when we hugged… that’s when I really fell for you.'
+            )">
+
+            ✦
+
+        </button>
+
+
+        <!-- 3 -->
+
+        <button
+            class="memory-star star-three"
+            onclick="openMemory(
+                2,
+                'Your Smile',
+                'There’s just something about your smile that makes me feel like I’m falling for you all over again.'
+            )">
+
+            ✦
+
+        </button>
+
+
+        <!-- 4 -->
+
+        <button
+            class="memory-star star-four"
+            onclick="openMemory(
+                3,
+                'Our Calls',
+                'I really cherish every minute we spend together, especially those little moments when we just talk and lose track of time.'
+            )">
+
+            ✦
+
+        </button>
+
+
+        <!-- 5 -->
+
+        <button
+            class="memory-star star-five"
+            onclick="openMemory(
+                4,
+                'Random Memory',
+                'Remember all those times we used to meet after school and hug? Those little moments are some of my favorite memories.'
+            )">
+
+            ✦
+
+        </button>
+
+
+        <!-- 6 -->
+
+        <button
+            class="memory-star star-six"
+            onclick="openMemory(
+                5,
+                'Forever',
+                'I hope we stay together forever and keep making memories in our little universe.'
+            )">
+
+            ✦
+
+        </button>
+
+    </section>
+
+
+    <div class="instructions">
+        ✦ &nbsp; TAP THE STARS TO EXPLORE &nbsp; ✦
+    </div>
+
+
+    <!-- PROGRESS -->
+
+    <div class="progress">
+
+        <div class="progress-info">
+
+            <span>
+                Universe explored
+            </span>
+
+            <span id="progressText">
+                0 / 6
+            </span>
+
+        </div>
+
+        <div class="progress-bar">
+
+            <div
+                id="progressFill"
+                class="progress-fill">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         FINAL SECTION
+    ================================================== -->
+
+    <section id="final">
+
+        <div class="final-small">
+            YOU FOUND EVERYTHING
+        </div>
+
+        <h2>
+            The universe<br>
+            <span>looks different now.</span>
+        </h2>
+
+        <p>
+            Maybe that’s what happens when someone special
+            becomes part of your world.
+        </p>
+
+        <button
+            class="final-button"
+            onclick="showFinal()">
+
+            See the final star ✦
+
+        </button>
+
+    </section>
+
+
+    <!-- =================================================
+         FINAL MESSAGE
+    ================================================== -->
+
+    <section id="final-message">
+
+        <div class="final-content">
+
+            <!--
+                CHANGE THIS NAME IF NEEDED
+            -->
+
+            <div class="final-name">
+                NOVA
+            </div>
+
+            <div class="final-divider"></div>
+
+            <p class="final-text">
+                In a universe this big,
+                <br>
+                I’m glad our paths crossed.
+            </p>
+
+            <span class="final-star">
+                ✦
+            </span>
+
+            <div class="final-caption">
+                THIS IS OUR LITTLE UNIVERSE
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- =====================================================
+     MEMORY MODAL
+===================================================== -->
+
+<div id="modal">
+
+    <div class="modal-card">
+
+        <button
+            class="close"
+            onclick="closeMemory()">
+
+            ×
+
+        </button>
+
+        <div class="modal-star">
+            ✦
+        </div>
+
+        <div class="modal-label">
+            A LITTLE MEMORY
+        </div>
+
+        <h2
+            id="modalTitle"
+            class="modal-title">
+
+            The Beginning
+
+        </h2>
+
+        <p
+            id="modalText"
+            class="modal-text">
+
+            Memory
+
+        </p>
+
+        <div class="modal-divider"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   INTRO STARS
+===================================================== */
+
+const introStars =
+    document.getElementById("introStars");
+
+for (let i = 0; i < 90; i++) {
+
+    const star =
+        document.createElement("span");
+
+    star.style.left =
+        Math.random() * 100 + "%";
+
+    star.style.top =
+        Math.random() * 100 + "%";
+
+    star.style.animationDelay =
+        Math.random() * 4 + "s";
+
+    introStars.appendChild(star);
+}
+
+
+/* =====================================================
+   MAIN STARFIELD
+===================================================== */
+
+const starfield =
+    document.getElementById("starfield");
+
+const starAmount =
+    window.innerWidth < 600 ? 110 : 190;
+
+for (let i = 0; i < starAmount; i++) {
+
+    const star =
+        document.createElement("div");
+
+    star.className = "star";
+
+    const size =
+        Math.random() * 2 + .6;
+
+    star.style.width =
+        size + "px";
+
+    star.style.height =
+        size + "px";
+
+    star.style.left =
+        Math.random() * 100 + "%";
+
+    star.style.top =
+        Math.random() * 100 + "%";
+
+    star.style.setProperty(
+        "--speed",
+        Math.random() * 4 + 2 + "s"
+    );
+
+    star.style.animationDelay =
+        Math.random() * 5 + "s";
+
+    starfield.appendChild(star);
+}
+
+
+/* =====================================================
+   ENTER
+===================================================== */
+
+function enterUniverse() {
+
+    const intro =
+        document.getElementById("intro");
+
+    const universe =
+        document.getElementById("universe");
+
+    intro.style.opacity = "0";
+
+    intro.style.transform =
+        "scale(1.06)";
+
+    setTimeout(() => {
+
+        intro.style.display =
+            "none";
+
+        universe.classList.remove(
+            "hidden"
+        );
+
+        window.scrollTo(0,0);
+
+    }, 1300);
+}
+
+
+/* =====================================================
+   MEMORY SYSTEM
+===================================================== */
+
+const discovered =
+    new Set();
+
+function openMemory(index, title, text) {
+
+    discovered.add(index);
+
+    const stars =
+        document.querySelectorAll(
+            ".memory-star"
+        );
+
+    stars[index].classList.add(
+        "found"
+    );
+
+
+    document
+        .getElementById("modalTitle")
+        .textContent = title;
+
+    document
+        .getElementById("modalText")
+        .textContent = text;
+
+
+    document
+        .getElementById("modal")
+        .classList.add("active");
+
+
+    updateProgress();
+}
+
+
+/* =====================================================
+   PROGRESS
+===================================================== */
+
+function updateProgress() {
+
+    const amount =
+        discovered.size;
+
+    document
+        .getElementById("progressText")
+        .textContent =
+        amount + " / 6";
+
+
+    document
+        .getElementById("progressFill")
+        .style.width =
+        (amount / 6 * 100) + "%";
+
+
+    if (amount === 6) {
+
+        const final =
+            document.getElementById("final");
+
+        final.classList.add(
+            "unlocked"
+        );
+
+        setTimeout(() => {
+
+            final.scrollIntoView({
+                behavior: "smooth"
+            });
+
+        }, 800);
+    }
+}
+
+
+/* =====================================================
+   CLOSE MEMORY
+===================================================== */
+
+function closeMemory() {
+
+    document
+        .getElementById("modal")
+        .classList.remove(
+            "active"
+        );
+}
+
+
+document
+    .getElementById("modal")
+    .addEventListener(
+        "click",
+        function(event) {
+
+            if (event.target === this) {
+                closeMemory();
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   FINAL
+===================================================== */
+
+function showFinal() {
+
+    document
+        .getElementById("final-message")
+        .scrollIntoView({
+            behavior: "smooth"
+        });
+
+}
+
+
+/* =====================================================
+   SHOOTING STARS
+===================================================== */
+
+function createShootingStar() {
+
+    const universe =
+        document.getElementById("universe");
+
+    if (
+        universe.classList.contains(
+            "hidden"
+        )
+    ) {
+        return;
+    }
+
+    const shooting =
+        document.createElement("div");
+
+    shooting.className =
+        "shooting-star";
+
+    shooting.style.right =
+        Math.random() * 45 + "%";
+
+    shooting.style.top =
+        Math.random() * 45 + "%";
+
+    document.body.appendChild(
+        shooting
+    );
+
+    setTimeout(() => {
+
+        shooting.remove();
+
+    }, 1500);
+}
+
+
+setInterval(
+    createShootingStar,
+    4500
+);
+
+
+/* =====================================================
+   ESCAPE TO CLOSE
+===================================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Escape"
+        ) {
+            closeMemory();
+        }
+
+    }
+);
+
+
+/* =====================================================
+   PREVENT DOUBLE-TAP ZOOM ON STARS
+===================================================== */
+
+document
+    .querySelectorAll(".memory-star")
+    .forEach(star => {
+
+        star.addEventListener(
+            "touchend",
+            function() {
+
+                this.style.transform =
+                    "scale(1.25)";
+
+                setTimeout(() => {
+
+                    this.style.transform =
+                        "";
+
+                }, 180);
+
+            }
+        );
+
+    });
+
+</script>
+
+</body>
+</html>
