@@ -1,0 +1,2653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Our Little Universe — V9.1</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#02030a;
+  color:white;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+body{
+  touch-action:none;
+}
+
+canvas{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+#loading,
+#intro,
+#memoryScreen,
+#endingScreen,
+#finalScreen{
+  position:fixed;
+  inset:0;
+  z-index:20;
+}
+
+#loading{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#02030a;
+  transition:opacity .8s ease;
+}
+
+.loader{
+  width:42px;
+  height:42px;
+  border:2px solid rgba(255,255,255,.12);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+#intro{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:
+    radial-gradient(circle at center,rgba(125,83,255,.16),transparent 35%),
+    #02030a;
+  z-index:30;
+}
+
+.intro-small{
+  opacity:.55;
+  font-size:11px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+
+.intro-title{
+  font-size:clamp(40px,10vw,90px);
+  font-weight:600;
+  letter-spacing:-3px;
+  margin:0;
+  text-shadow:0 0 35px rgba(180,150,255,.25);
+}
+
+.intro-sub{
+  margin-top:16px;
+  opacity:.62;
+  font-size:14px;
+}
+
+#enterButton,
+#memoryButton,
+#continueButton{
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.07);
+  color:white;
+  padding:13px 22px;
+  border-radius:999px;
+  font-size:13px;
+  cursor:pointer;
+  backdrop-filter:blur(14px);
+  transition:.25s;
+}
+
+#enterButton{
+  margin-top:34px;
+}
+
+#enterButton:hover,
+#memoryButton:hover,
+#continueButton:hover{
+  background:rgba(255,255,255,.14);
+  transform:translateY(-2px);
+}
+
+#hud{
+  position:fixed;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:10;
+  pointer-events:none;
+  text-align:center;
+  opacity:.85;
+}
+
+#hud .name{
+  font-size:11px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  opacity:.55;
+}
+
+#hud .hint{
+  margin-top:7px;
+  font-size:11px;
+  opacity:.4;
+}
+
+#progress{
+  position:fixed;
+  bottom:18px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:10;
+  font-size:10px;
+  letter-spacing:2px;
+  opacity:.4;
+  pointer-events:none;
+}
+
+#toast{
+  position:fixed;
+  left:50%;
+  bottom:65px;
+  transform:translate(-50%,20px);
+  z-index:50;
+  padding:11px 16px;
+  border-radius:999px;
+  background:rgba(10,10,20,.72);
+  border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(14px);
+  font-size:11px;
+  opacity:0;
+  pointer-events:none;
+  white-space:nowrap;
+}
+
+#memoryScreen{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:rgba(1,2,8,.74);
+  backdrop-filter:blur(13px);
+  opacity:0;
+  pointer-events:none;
+}
+
+.memory-card{
+  width:min(460px,92vw);
+  max-height:88vh;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:28px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.095),
+      rgba(255,255,255,.025)
+    );
+  box-shadow:
+    0 25px 90px rgba(0,0,0,.55),
+    0 0 70px rgba(150,120,255,.08);
+  backdrop-filter:blur(24px);
+  padding:20px;
+}
+
+.memory-image{
+  width:100%;
+  max-height:46vh;
+  object-fit:cover;
+  border-radius:19px;
+  display:none;
+  margin-bottom:20px;
+}
+
+.memory-number{
+  font-size:10px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  opacity:.4;
+}
+
+.memory-title{
+  font-size:clamp(28px,8vw,42px);
+  margin:8px 0 12px;
+  letter-spacing:-1.5px;
+  font-weight:500;
+}
+
+.memory-text{
+  font-size:14px;
+  line-height:1.75;
+  opacity:.65;
+  margin:0 0 22px;
+}
+
+#endingScreen{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:#000;
+  opacity:0;
+  pointer-events:none;
+}
+
+#endingVideo{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#000;
+}
+
+.ending-overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  padding-bottom:35px;
+  background:linear-gradient(
+    transparent 60%,
+    rgba(0,0,0,.7)
+  );
+  pointer-events:none;
+}
+
+.ending-title{
+  font-size:12px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  opacity:.65;
+  margin-bottom:15px;
+}
+
+#continueButton{
+  pointer-events:auto;
+}
+
+#finalScreen{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(154,103,255,.18),
+      transparent 30%
+    ),
+    #02030a;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.final-core{
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.95) 0%,
+      rgba(207,180,255,.75) 15%,
+      rgba(145,100,255,.3) 45%,
+      transparent 72%
+    );
+  filter:blur(.2px);
+  box-shadow:
+    0 0 30px rgba(190,160,255,.65),
+    0 0 100px rgba(130,90,255,.3);
+  animation:pulseCore 3s ease-in-out infinite;
+}
+
+@keyframes pulseCore{
+  0%,100%{
+    transform:scale(.9);
+    opacity:.75;
+  }
+  50%{
+    transform:scale(1.12);
+    opacity:1;
+  }
+}
+
+.final-title{
+  margin-top:34px;
+  font-size:clamp(48px,14vw,100px);
+  letter-spacing:-5px;
+  font-weight:500;
+}
+
+.final-sub{
+  margin-top:8px;
+  font-size:11px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  opacity:.35;
+}
+
+.final-stars{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.final-star{
+  position:absolute;
+  width:2px;
+  height:2px;
+  border-radius:50%;
+  background:white;
+  opacity:.4;
+  animation:starFloat 5s ease-in-out infinite;
+}
+
+@keyframes starFloat{
+  0%,100%{
+    transform:translateY(0);
+    opacity:.25;
+  }
+  50%{
+    transform:translateY(-15px);
+    opacity:.8;
+  }
+}
+
+@media(max-width:600px){
+  .memory-card{
+    padding:17px;
+    border-radius:23px;
+  }
+
+  .memory-text{
+    font-size:13px;
+  }
+
+  #hud{
+    top:14px;
+  }
+
+  #progress{
+    bottom:12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">
+  <div class="loader"></div>
+</div>
+
+<div id="intro">
+  <div class="intro-small">A little universe</div>
+  <h1 class="intro-title">Our Little Universe</h1>
+  <div class="intro-sub">Six little places. A lot of memories.</div>
+  <button id="enterButton">Enter the universe</button>
+</div>
+
+<div id="hud">
+  <div class="name">Our Little Universe</div>
+  <div class="hint">Drag to explore · Tap a planet</div>
+</div>
+
+<div id="progress">
+  0 / 5 memories discovered
+</div>
+
+<div id="toast"></div>
+
+<div id="memoryScreen">
+  <div class="memory-card">
+    <img id="memoryImage" class="memory-image">
+
+    <div id="memoryNumber" class="memory-number">
+      Memory 01
+    </div>
+
+    <h2 id="memoryTitle" class="memory-title">
+      That Smile
+    </h2>
+
+    <p id="memoryText" class="memory-text"></p>
+
+    <button id="memoryButton">
+      Return to the universe
+    </button>
+  </div>
+</div>
+
+<div id="endingScreen">
+  <video
+    id="endingVideo"
+    playsinline
+    preload="auto"
+  >
+    <source src="ending.MP4" type="video/mp4">
+  </video>
+
+  <div class="ending-overlay">
+    <div class="ending-title">One last thing</div>
+    <button id="continueButton">Continue</button>
+  </div>
+</div>
+
+<div id="finalScreen">
+  <div class="final-stars" id="finalStars"></div>
+
+  <div class="final-core"></div>
+
+  <div class="final-title">NOVA</div>
+
+  <div class="final-sub">
+    still part of my universe
+  </div>
+</div>
+
+<canvas id="space"></canvas>
+
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+
+<script type="module">
+
+import * as THREE from "three";
+
+import {
+  OrbitControls
+} from "three/addons/controls/OrbitControls.js";
+
+import {
+  EffectComposer
+} from "three/addons/postprocessing/EffectComposer.js";
+
+import {
+  RenderPass
+} from "three/addons/postprocessing/RenderPass.js";
+
+import {
+  UnrealBloomPass
+} from "three/addons/postprocessing/UnrealBloomPass.js";
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const canvas =
+  document.getElementById("space");
+
+const loading =
+  document.getElementById("loading");
+
+const intro =
+  document.getElementById("intro");
+
+const enterButton =
+  document.getElementById("enterButton");
+
+const memoryScreen =
+  document.getElementById("memoryScreen");
+
+const memoryImage =
+  document.getElementById("memoryImage");
+
+const memoryNumber =
+  document.getElementById("memoryNumber");
+
+const memoryTitle =
+  document.getElementById("memoryTitle");
+
+const memoryText =
+  document.getElementById("memoryText");
+
+const memoryButton =
+  document.getElementById("memoryButton");
+
+const progress =
+  document.getElementById("progress");
+
+const toast =
+  document.getElementById("toast");
+
+const endingScreen =
+  document.getElementById("endingScreen");
+
+const endingVideo =
+  document.getElementById("endingVideo");
+
+const continueButton =
+  document.getElementById("continueButton");
+
+const finalScreen =
+  document.getElementById("finalScreen");
+
+const finalStars =
+  document.getElementById("finalStars");
+
+
+/* =========================================================
+   MEMORY DATA
+========================================================= */
+
+const memories = [
+
+  {
+    title:"That Smile",
+    text:"There are some little things that somehow become your favorite things without you even noticing.",
+    image:"smile.JPG",
+    radius:7.5,
+    angle:.4,
+    height:1.1,
+    size:.72,
+    color:0xff91c9
+  },
+
+  {
+    title:"Our Calls",
+    text:"Somehow even the random conversations became memories worth keeping.",
+    image:"calls.jpeg",
+    radius:8.4,
+    angle:2.55,
+    height:-1.1,
+    size:.88,
+    color:0x76a9ff
+  },
+
+  {
+    title:"Random Memories",
+    text:"The moments we never planned are sometimes the ones that stay with us the longest.",
+    image:"memory.JPG",
+    radius:12.8,
+    angle:1.05,
+    height:1.3,
+    size:.95,
+    color:0xb17cff
+  },
+
+  {
+    title:"The Beginning",
+    text:"I didn't know where this was going when everything started. I just knew I wanted to keep talking.",
+    radius:14.4,
+    angle:4.35,
+    height:-1.35,
+    size:.76,
+    color:0xd9a67a
+  },
+
+  {
+    title:"The Little Things",
+    text:"It's funny how the smallest moments can slowly become the biggest memories.",
+    radius:18.8,
+    angle:2.65,
+    height:1.25,
+    size:1.05,
+    color:0x6fe0cf
+  },
+
+  {
+    title:"Still Here",
+    text:"And somehow, after everything, there are still more memories waiting to be made.",
+    radius:20.8,
+    angle:5.35,
+    height:-1.35,
+    size:.9,
+    color:0xc59bff,
+    locked:true
+  }
+
+];
+
+const REQUIRED_MEMORIES = 5;
+
+const discovered = new Set();
+
+
+/* =========================================================
+   THREE.JS SETUP
+========================================================= */
+
+const scene =
+  new THREE.Scene();
+
+scene.background =
+  new THREE.Color(0x02030a);
+
+scene.fog =
+  new THREE.FogExp2(
+    0x02030a,
+    .008
+  );
+
+
+const camera =
+  new THREE.PerspectiveCamera(
+    55,
+    innerWidth / innerHeight,
+    .1,
+    500
+  );
+
+camera.position.set(
+  0,
+  5.7,
+  32
+);
+
+
+const renderer =
+  new THREE.WebGLRenderer({
+    canvas,
+    antialias:true,
+    powerPreference:"high-performance"
+  });
+
+renderer.setSize(
+  innerWidth,
+  innerHeight
+);
+
+renderer.setPixelRatio(
+  Math.min(devicePixelRatio,1.35)
+);
+
+renderer.outputColorSpace =
+  THREE.SRGBColorSpace;
+
+renderer.toneMapping =
+  THREE.ACESFilmicToneMapping;
+
+renderer.toneMappingExposure =
+  .82;
+
+
+const controls =
+  new OrbitControls(
+    camera,
+    renderer.domElement
+  );
+
+controls.enableDamping = true;
+controls.dampingFactor = .075;
+
+controls.enablePan = false;
+controls.enableZoom = true;
+
+controls.zoomSpeed = .72;
+controls.rotateSpeed = .48;
+
+controls.minDistance = 14;
+controls.maxDistance = 55;
+
+controls.minPolarAngle = .22;
+controls.maxPolarAngle =
+  Math.PI - .22;
+
+controls.target.set(0,0,0);
+
+
+/* =========================================================
+   POST PROCESSING
+========================================================= */
+
+const composer =
+  new EffectComposer(renderer);
+
+const renderPass =
+  new RenderPass(
+    scene,
+    camera
+  );
+
+composer.addPass(
+  renderPass
+);
+
+const bloom =
+  new UnrealBloomPass(
+    new THREE.Vector2(
+      innerWidth,
+      innerHeight
+    ),
+    .42,
+    .55,
+    .3
+  );
+
+composer.addPass(
+  bloom
+);
+
+
+/* =========================================================
+   GALAXY
+========================================================= */
+
+const galaxyGroup =
+  new THREE.Group();
+
+scene.add(
+  galaxyGroup
+);
+
+
+const isMobile =
+  innerWidth < 700;
+
+
+/* Galaxy dust */
+
+const galaxyCount =
+  isMobile ? 4500 : 8500;
+
+const galaxyPositions =
+  new Float32Array(
+    galaxyCount * 3
+  );
+
+const galaxyColors =
+  new Float32Array(
+    galaxyCount * 3
+  );
+
+const galaxyGeometry =
+  new THREE.BufferGeometry();
+
+const galaxyMaterial =
+  new THREE.PointsMaterial({
+    size:isMobile ? .045 : .055,
+    transparent:true,
+    opacity:.58,
+    depthWrite:false,
+    blending:
+      THREE.AdditiveBlending,
+    vertexColors:true
+  });
+
+for(let i=0;i<galaxyCount;i++){
+
+  const i3=i*3;
+
+  const radius =
+    Math.pow(Math.random(),.55)*29;
+
+  const arm =
+    Math.floor(
+      Math.random()*5
+    );
+
+  const spin =
+    radius*.19;
+
+  const angle =
+    arm*(Math.PI*2/5)
+    +spin
+    +(Math.random()-.5)*.62;
+
+  const height =
+    (Math.random()-.5)
+    *(1.2+radius*.045);
+
+  galaxyPositions[i3] =
+    Math.cos(angle)*radius;
+
+  galaxyPositions[i3+1] =
+    height;
+
+  galaxyPositions[i3+2] =
+    Math.sin(angle)*radius;
+
+  const mix =
+    Math.random();
+
+  galaxyColors[i3] =
+    .55 + mix*.4;
+
+  galaxyColors[i3+1] =
+    .48 + mix*.38;
+
+  galaxyColors[i3+2] =
+    .9 + mix*.1;
+}
+
+galaxyGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(
+    galaxyPositions,
+    3
+  )
+);
+
+galaxyGeometry.setAttribute(
+  "color",
+  new THREE.BufferAttribute(
+    galaxyColors,
+    3
+  )
+);
+
+const galaxy =
+  new THREE.Points(
+    galaxyGeometry,
+    galaxyMaterial
+  );
+
+galaxyGroup.add(
+  galaxy
+);
+
+
+/* =========================================================
+   BACKGROUND STARS
+========================================================= */
+
+const starCount =
+  isMobile ? 2200 : 4300;
+
+const starPositions =
+  new Float32Array(
+    starCount*3
+  );
+
+const starGeometry =
+  new THREE.BufferGeometry();
+
+for(let i=0;i<starCount;i++){
+
+  const i3=i*3;
+
+  const r =
+    40 + Math.random()*110;
+
+  const theta =
+    Math.random()*Math.PI*2;
+
+  const phi =
+    Math.acos(
+      2*Math.random()-1
+    );
+
+  starPositions[i3] =
+    r*Math.sin(phi)*Math.cos(theta);
+
+  starPositions[i3+1] =
+    r*Math.cos(phi);
+
+  starPositions[i3+2] =
+    r*Math.sin(phi)*Math.sin(theta);
+}
+
+starGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(
+    starPositions,
+    3
+  )
+);
+
+const starMaterial =
+  new THREE.PointsMaterial({
+    color:0xffffff,
+    size:isMobile ? .04 : .055,
+    transparent:true,
+    opacity:.72,
+    depthWrite:false
+  });
+
+const stars =
+  new THREE.Points(
+    starGeometry,
+    starMaterial
+  );
+
+scene.add(stars);
+
+
+/* =========================================================
+   CENTRAL CORE
+========================================================= */
+
+const core =
+  new THREE.Mesh(
+    new THREE.SphereGeometry(
+      2.1,
+      48,
+      48
+    ),
+    new THREE.MeshBasicMaterial({
+      color:0x8668ff,
+      transparent:true,
+      opacity:.32
+    })
+  );
+
+scene.add(core);
+
+
+const glowTexture =
+  createGlowTexture();
+
+const coreGlow =
+  new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map:glowTexture,
+      color:0xa98cff,
+      transparent:true,
+      opacity:.48,
+      blending:
+        THREE.AdditiveBlending,
+      depthWrite:false
+    })
+  );
+
+coreGlow.scale.set(
+  10,
+  10,
+  1
+);
+
+scene.add(
+  coreGlow
+);
+
+
+/* =========================================================
+   ORBIT RINGS
+========================================================= */
+
+[7.5,13,19].forEach(radius=>{
+
+  const curve =
+    new THREE.EllipseCurve(
+      0,
+      0,
+      radius,
+      radius,
+      0,
+      Math.PI*2,
+      false,
+      0
+    );
+
+  const points =
+    curve.getPoints(160);
+
+  const geometry =
+    new THREE.BufferGeometry()
+      .setFromPoints(
+        points.map(
+          p=>new THREE.Vector3(
+            p.x,
+            0,
+            p.y
+          )
+        )
+      );
+
+  const material =
+    new THREE.LineBasicMaterial({
+      color:0x8f7bd8,
+      transparent:true,
+      opacity:.08
+    });
+
+  const ring =
+    new THREE.LineLoop(
+      geometry,
+      material
+    );
+
+  galaxyGroup.add(
+    ring
+  );
+});
+
+
+/* =========================================================
+   PLANETS
+========================================================= */
+
+const planetObjects = [];
+
+function createPlanet(memory,index){
+
+  const group =
+    new THREE.Group();
+
+  const x =
+    Math.cos(memory.angle)
+    *memory.radius;
+
+  const z =
+    Math.sin(memory.angle)
+    *memory.radius;
+
+  group.position.set(
+    x,
+    memory.height,
+    z
+  );
+
+  group.userData.index =
+    index;
+
+
+  const planet =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        memory.size,
+        32,
+        32
+      ),
+      new THREE.MeshStandardMaterial({
+        color:memory.color,
+        emissive:memory.color,
+        emissiveIntensity:.32,
+        roughness:.65,
+        metalness:.05
+      })
+    );
+
+  group.add(
+    planet
+  );
+
+
+  const atmosphere =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(
+        memory.size*1.18,
+        24,
+        24
+      ),
+      new THREE.MeshBasicMaterial({
+        color:memory.color,
+        transparent:true,
+        opacity:.09,
+        side:THREE.BackSide,
+        blending:
+          THREE.AdditiveBlending
+      })
+    );
+
+  group.add(
+    atmosphere
+  );
+
+
+  if(index % 2 === 1){
+
+    const ring =
+      new THREE.Mesh(
+        new THREE.TorusGeometry(
+          memory.size*1.65,
+          .025,
+          8,
+          64
+        ),
+        new THREE.MeshBasicMaterial({
+          color:memory.color,
+          transparent:true,
+          opacity:.32
+        })
+      );
+
+    ring.rotation.x =
+      Math.PI*.58;
+
+    group.add(
+      ring
+    );
+  }
+
+
+  const locator =
+    new THREE.Mesh(
+      new THREE.RingGeometry(
+        memory.size*1.65,
+        memory.size*1.75,
+        32
+      ),
+      new THREE.MeshBasicMaterial({
+        color:memory.color,
+        transparent:true,
+        opacity:.22,
+        side:THREE.DoubleSide
+      })
+    );
+
+  locator.rotation.x =
+    -Math.PI/2;
+
+  locator.position.y =
+    -memory.size*.9;
+
+  group.add(
+    locator
+  );
+
+
+  if(memory.locked){
+
+    const lock =
+      new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map:createTextTexture("🔒"),
+          transparent:true,
+          depthWrite:false
+        })
+      );
+
+    lock.scale.set(
+      .8,
+      .8,
+      1
+    );
+
+    lock.position.set(
+      0,
+      memory.size*1.8,
+      0
+    );
+
+    group.add(lock);
+
+    group.userData.lockSprite =
+      lock;
+  }
+
+
+  galaxyGroup.add(
+    group
+  );
+
+  planetObjects.push(
+    group
+  );
+}
+
+
+memories.forEach(
+  createPlanet
+);
+
+
+/* =========================================================
+   LIGHTING
+========================================================= */
+
+scene.add(
+  new THREE.AmbientLight(
+    0x8b7cff,
+    .5
+  )
+);
+
+const pointLight =
+  new THREE.PointLight(
+    0xffffff,
+    7,
+    70
+  );
+
+pointLight.position.set(
+  0,
+  0,
+  0
+);
+
+scene.add(
+  pointLight
+);
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let universeActive = false;
+let memoryOpen = false;
+let endingActive = false;
+let finalActive = false;
+
+let selectedPlanet = null;
+
+let cameraAnimating = false;
+
+let toastTween = null;
+
+
+/* =========================================================
+   TEXTURE HELPERS
+========================================================= */
+
+function createGlowTexture(){
+
+  const size=256;
+
+  const c =
+    document.createElement("canvas");
+
+  c.width=size;
+  c.height=size;
+
+  const ctx =
+    c.getContext("2d");
+
+  const gradient =
+    ctx.createRadialGradient(
+      size/2,
+      size/2,
+      0,
+      size/2,
+      size/2,
+      size/2
+    );
+
+  gradient.addColorStop(
+    0,
+    "rgba(255,255,255,1)"
+  );
+
+  gradient.addColorStop(
+    .12,
+    "rgba(200,180,255,.9)"
+  );
+
+  gradient.addColorStop(
+    .4,
+    "rgba(130,100,255,.35)"
+  );
+
+  gradient.addColorStop(
+    1,
+    "rgba(0,0,0,0)"
+  );
+
+  ctx.fillStyle=gradient;
+
+  ctx.fillRect(
+    0,
+    0,
+    size,
+    size
+  );
+
+  return new THREE.CanvasTexture(c);
+}
+
+
+function createTextTexture(text){
+
+  const canvas =
+    document.createElement("canvas");
+
+  canvas.width=128;
+  canvas.height=128;
+
+  const ctx =
+    canvas.getContext("2d");
+
+  ctx.clearRect(
+    0,
+    0,
+    128,
+    128
+  );
+
+  ctx.font="72px serif";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+
+  ctx.fillText(
+    text,
+    64,
+    64
+  );
+
+  return new THREE.CanvasTexture(
+    canvas
+  );
+}
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+function updateProgress(){
+
+  progress.textContent =
+    `${discovered.size} / ${REQUIRED_MEMORIES} memories discovered`;
+}
+
+
+/* =========================================================
+   LOCK TOAST
+========================================================= */
+
+function showLockToast(){
+
+  if(toastTween)
+    toastTween.kill();
+
+  toast.textContent =
+    `Unlock the first ${REQUIRED_MEMORIES} memories first ✨`;
+
+  toastTween =
+    gsap.timeline();
+
+  toastTween
+    .to(toast,{
+      opacity:1,
+      y:0,
+      duration:.35,
+      ease:"power3.out"
+    })
+    .to(toast,{
+      opacity:0,
+      y:20,
+      duration:.5,
+      delay:1.8,
+      ease:"power2.in"
+    });
+}
+
+
+/* =========================================================
+   UNLOCK MEMORY 6
+========================================================= */
+
+function checkUnlock(){
+
+  if(
+    discovered.size !==
+    REQUIRED_MEMORIES
+  )
+    return;
+
+  const memory =
+    memories[5];
+
+  if(!memory.locked)
+    return;
+
+  memory.locked=false;
+
+  const planet =
+    planetObjects[5];
+
+  const lock =
+    planet.userData.lockSprite;
+
+  if(lock){
+
+    gsap.to(
+      lock.material,
+      {
+        opacity:0,
+        duration:.5,
+        onComplete:()=>{
+          planet.remove(lock);
+        }
+      }
+    );
+  }
+
+  gsap.fromTo(
+    planet.scale,
+    {
+      x:1,
+      y:1,
+      z:1
+    },
+    {
+      x:1.35,
+      y:1.35,
+      z:1.35,
+      duration:.35,
+      yoyo:true,
+      repeat:1,
+      ease:"power2.inOut"
+    }
+  );
+
+  showUnlockToast();
+}
+
+
+function showUnlockToast(){
+
+  if(toastTween)
+    toastTween.kill();
+
+  toast.textContent =
+    "The final memory has been unlocked ✨";
+
+  toastTween =
+    gsap.timeline();
+
+  toastTween
+    .to(toast,{
+      opacity:1,
+      y:0,
+      duration:.35,
+      ease:"power3.out"
+    })
+    .to(toast,{
+      opacity:0,
+      y:20,
+      duration:.6,
+      delay:2,
+      ease:"power2.in"
+    });
+}
+
+
+/* =========================================================
+   CAMERA — FLY TO PLANET
+========================================================= */
+
+function focusPlanet(
+  index,
+  onComplete
+){
+
+  const planet =
+    planetObjects[index];
+
+  if(!planet)
+    return;
+
+  cameraAnimating=true;
+  controls.enabled=false;
+
+  const worldPos =
+    new THREE.Vector3();
+
+  planet.getWorldPosition(
+    worldPos
+  );
+
+  /*
+    Direction from planet toward
+    the current camera.
+  */
+
+  const direction =
+    new THREE.Vector3()
+      .subVectors(
+        camera.position,
+        worldPos
+      )
+      .normalize();
+
+  /*
+    Keep the camera close enough
+    to feel cinematic, but not so
+    close that the planet clips.
+  */
+
+  const distance =
+    Math.max(
+      3.8,
+      memories[index].size*6
+    );
+
+  const targetPosition =
+    worldPos.clone()
+      .add(
+        direction.multiplyScalar(
+          distance
+        )
+      );
+
+  /*
+    Slightly raise the camera for
+    a more cinematic perspective.
+  */
+
+  targetPosition.y +=
+    memories[index].size*.45;
+
+
+  const state = {
+
+    x:camera.position.x,
+    y:camera.position.y,
+    z:camera.position.z,
+
+    tx:controls.target.x,
+    ty:controls.target.y,
+    tz:controls.target.z
+
+  };
+
+
+  gsap.killTweensOf(state);
+
+
+  gsap.to(
+    state,
+    {
+
+      x:targetPosition.x,
+      y:targetPosition.y,
+      z:targetPosition.z,
+
+      tx:worldPos.x,
+      ty:worldPos.y,
+      tz:worldPos.z,
+
+      duration:1.35,
+
+      ease:"power3.inOut",
+
+      onUpdate:()=>{
+
+        camera.position.set(
+          state.x,
+          state.y,
+          state.z
+        );
+
+        controls.target.set(
+          state.tx,
+          state.ty,
+          state.tz
+        );
+
+        camera.lookAt(
+          worldPos
+        );
+
+      },
+
+      onComplete:()=>{
+
+        cameraAnimating=false;
+
+        camera.lookAt(
+          worldPos
+        );
+
+        if(onComplete)
+          onComplete();
+
+      }
+
+    }
+  );
+
+
+  /*
+    Give the selected planet a
+    subtle arrival pulse.
+  */
+
+  gsap.fromTo(
+    planet.scale,
+    {
+      x:1,
+      y:1,
+      z:1
+    },
+    {
+      x:1.12,
+      y:1.12,
+      z:1.12,
+      duration:.7,
+      yoyo:true,
+      repeat:1,
+      ease:"power2.inOut"
+    }
+  );
+
+}
+
+
+/* =========================================================
+   CAMERA — RETURN TO UNIVERSE
+========================================================= */
+
+function returnToUniverse(
+  onComplete
+){
+
+  cameraAnimating=true;
+  controls.enabled=false;
+
+  const state={
+
+    x:camera.position.x,
+    y:camera.position.y,
+    z:camera.position.z,
+
+    tx:controls.target.x,
+    ty:controls.target.y,
+    tz:controls.target.z
+
+  };
+
+  gsap.to(
+    state,
+    {
+
+      x:0,
+      y:5.7,
+      z:32,
+
+      tx:0,
+      ty:0,
+      tz:0,
+
+      duration:1.25,
+
+      ease:"power3.inOut",
+
+      onUpdate:()=>{
+
+        camera.position.set(
+          state.x,
+          state.y,
+          state.z
+        );
+
+        controls.target.set(
+          state.tx,
+          state.ty,
+          state.tz
+        );
+
+        camera.lookAt(
+          state.tx,
+          state.ty,
+          state.tz
+        );
+
+      },
+
+      onComplete:()=>{
+
+        cameraAnimating=false;
+
+        camera.lookAt(
+          0,
+          0,
+          0
+        );
+
+        controls.enabled =
+          universeActive;
+
+        if(onComplete)
+          onComplete();
+
+      }
+
+    }
+  );
+}
+
+
+/* =========================================================
+   MEMORY OPEN
+========================================================= */
+
+function showMemory(index){
+
+  const memory =
+    memories[index];
+
+
+  if(
+    memory.locked &&
+    discovered.size <
+      REQUIRED_MEMORIES
+  ){
+
+    showLockToast();
+    return;
+  }
+
+
+  selectedPlanet=index;
+
+  memoryOpen=true;
+
+  controls.enabled=false;
+
+
+  memoryNumber.textContent =
+    `Memory ${String(index+1).padStart(2,"0")}`;
+
+  memoryTitle.textContent =
+    memory.title;
+
+  memoryText.textContent =
+    memory.text;
+
+
+  if(memory.image){
+
+    memoryImage.src =
+      memory.image;
+
+    memoryImage.style.display =
+      "block";
+
+  }else{
+
+    memoryImage.removeAttribute(
+      "src"
+    );
+
+    memoryImage.style.display =
+      "none";
+
+  }
+
+
+  memoryButton.textContent =
+    index === 5
+      ? "Continue"
+      : "Return to the universe";
+
+
+  memoryScreen.style.display =
+    "flex";
+
+  memoryScreen.style.pointerEvents =
+    "none";
+
+  gsap.killTweensOf(
+    memoryScreen
+  );
+
+  gsap.fromTo(
+    memoryScreen,
+    {
+      opacity:0
+    },
+    {
+      opacity:1,
+      duration:.9,
+      ease:"power3.out",
+      onComplete:()=>{
+
+        memoryScreen.style.pointerEvents =
+          "auto";
+
+      }
+    }
+  );
+
+
+  gsap.fromTo(
+    ".memory-card",
+    {
+      y:30,
+      scale:.97,
+      opacity:0
+    },
+    {
+      y:0,
+      scale:1,
+      opacity:1,
+      duration:.85,
+      ease:"power3.out"
+    }
+  );
+
+
+  discovered.add(index);
+
+
+  if(index < 5){
+
+    updateProgress();
+    checkUnlock();
+
+  }
+
+}
+
+
+/* =========================================================
+   OPEN MEMORY WITH CAMERA FLY-IN
+========================================================= */
+
+function openMemoryFromPlanet(
+  index
+){
+
+  const memory =
+    memories[index];
+
+
+  if(
+    memory.locked &&
+    discovered.size <
+      REQUIRED_MEMORIES
+  ){
+
+    showLockToast();
+    return;
+  }
+
+
+  selectedPlanet=index;
+
+  /*
+    First fly toward the planet.
+    Only after the camera arrives
+    do we reveal the memory card.
+  */
+
+  focusPlanet(
+    index,
+    ()=>{
+      showMemory(index);
+    }
+  );
+
+}
+
+
+/* =========================================================
+   CLOSE MEMORY
+========================================================= */
+
+function closeMemory(){
+
+  if(selectedPlanet === 5){
+
+    startEnding();
+    return;
+  }
+
+
+  gsap.to(
+    memoryScreen,
+    {
+
+      opacity:0,
+
+      duration:.55,
+
+      ease:"power2.inOut",
+
+      onComplete:()=>{
+
+        memoryScreen.style.display =
+          "none";
+
+        memoryScreen.style.pointerEvents =
+          "none";
+
+        memoryOpen=false;
+
+        const previousPlanet =
+          selectedPlanet;
+
+        selectedPlanet=null;
+
+
+        /*
+          Return to the galaxy
+          after the card closes.
+        */
+
+        returnToUniverse(
+          ()=>{
+            if(previousPlanet !== null){
+              /*
+                No action needed.
+                Kept here so the transition
+                remains easy to extend.
+              */
+            }
+          }
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   ENDING
+========================================================= */
+
+function startEnding(){
+
+  if(endingActive)
+    return;
+
+  endingActive=true;
+  memoryOpen=false;
+
+  controls.enabled=false;
+
+  gsap.to(
+    memoryScreen,
+    {
+      opacity:0,
+      duration:.55,
+      ease:"power2.inOut",
+      onComplete:()=>{
+
+        memoryScreen.style.display =
+          "none";
+
+        memoryScreen.style.pointerEvents =
+          "none";
+
+        endingScreen.style.display =
+          "flex";
+
+        endingScreen.style.pointerEvents =
+          "auto";
+
+        gsap.fromTo(
+          endingScreen,
+          {
+            opacity:0
+          },
+          {
+            opacity:1,
+            duration:1,
+            ease:"power2.inOut"
+          }
+        );
+
+        endingVideo.currentTime=0;
+
+        endingVideo.play()
+          .catch(()=>{});
+
+      }
+    }
+  );
+
+}
+
+
+endingVideo.addEventListener(
+  "ended",
+  ()=>{
+    continueToFinal();
+  }
+);
+
+
+continueButton.addEventListener(
+  "click",
+  ()=>{
+    continueToFinal();
+  }
+);
+
+
+function continueToFinal(){
+
+  if(finalActive)
+    return;
+
+  finalActive=true;
+
+  endingVideo.pause();
+
+  gsap.to(
+    endingScreen,
+    {
+
+      opacity:0,
+
+      duration:.9,
+
+      ease:"power2.inOut",
+
+      onComplete:()=>{
+
+        endingScreen.style.display =
+          "none";
+
+        endingScreen.style.pointerEvents =
+          "none";
+
+        showFinal();
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FINAL
+========================================================= */
+
+function createFinalStars(){
+
+  finalStars.innerHTML="";
+
+  for(let i=0;i<90;i++){
+
+    const star =
+      document.createElement("div");
+
+    star.className =
+      "final-star";
+
+    star.style.left =
+      `${Math.random()*100}%`;
+
+    star.style.top =
+      `${Math.random()*100}%`;
+
+    star.style.animationDelay =
+      `${Math.random()*5}s`;
+
+    star.style.animationDuration =
+      `${3+Math.random()*5}s`;
+
+    finalStars.appendChild(
+      star
+    );
+  }
+
+}
+
+
+function showFinal(){
+
+  createFinalStars();
+
+  finalScreen.style.display =
+    "flex";
+
+  finalScreen.style.pointerEvents =
+    "auto";
+
+  gsap.fromTo(
+    finalScreen,
+    {
+      opacity:0
+    },
+    {
+      opacity:1,
+      duration:2,
+      ease:"power2.inOut"
+    }
+  );
+
+  gsap.fromTo(
+    ".final-title",
+    {
+      y:25,
+      opacity:0,
+      scale:.96
+    },
+    {
+      y:0,
+      opacity:1,
+      scale:1,
+      duration:1.4,
+      delay:.45,
+      ease:"power3.out"
+    }
+  );
+
+  gsap.fromTo(
+    ".final-sub",
+    {
+      opacity:0
+    },
+    {
+      opacity:.35,
+      duration:1.2,
+      delay:1.2
+    }
+  );
+
+}
+
+
+/* =========================================================
+   RAYCASTING
+========================================================= */
+
+const raycaster =
+  new THREE.Raycaster();
+
+const pointer =
+  new THREE.Vector2();
+
+
+function pointerDown(event){
+
+  if(
+    !universeActive ||
+    memoryOpen ||
+    endingActive ||
+    finalActive ||
+    cameraAnimating
+  )
+    return;
+
+
+  const rect =
+    renderer.domElement
+      .getBoundingClientRect();
+
+
+  pointer.x =
+    (
+      (event.clientX -
+        rect.left) /
+      rect.width
+    ) * 2 - 1;
+
+
+  pointer.y =
+    -(
+      (event.clientY -
+        rect.top) /
+      rect.height
+    ) * 2 + 1;
+
+
+  raycaster.setFromCamera(
+    pointer,
+    camera
+  );
+
+
+  const intersections =
+    raycaster.intersectObjects(
+      planetObjects,
+      true
+    );
+
+
+  if(!intersections.length)
+    return;
+
+
+  let object =
+    intersections[0].object;
+
+
+  while(
+    object.parent &&
+    object.userData.index === undefined
+  ){
+
+    object =
+      object.parent;
+
+  }
+
+
+  let index =
+    object.userData.index;
+
+
+  if(index === undefined){
+
+    for(
+      let i=0;
+      i<planetObjects.length;
+      i++
+    ){
+
+      if(
+        intersections[0].object ===
+          planetObjects[i] ||
+        planetObjects[i].children
+          .includes(
+            intersections[0].object
+          )
+      ){
+
+        index=i;
+        break;
+
+      }
+
+    }
+
+  }
+
+
+  if(index === undefined)
+    return;
+
+
+  openMemoryFromPlanet(
+    index
+  );
+
+}
+
+
+renderer.domElement.addEventListener(
+  "pointerdown",
+  pointerDown
+);
+
+
+/* =========================================================
+   ENTER UNIVERSE
+========================================================= */
+
+enterButton.addEventListener(
+  "click",
+  ()=>{
+
+    gsap.to(
+      intro,
+      {
+
+        opacity:0,
+
+        duration:1.2,
+
+        ease:"power3.inOut",
+
+        onComplete:()=>{
+
+          intro.style.display =
+            "none";
+
+          universeActive=true;
+
+          controls.enabled=true;
+
+        }
+
+      }
+    );
+
+    /*
+      Cinematic opening camera.
+    */
+
+    camera.position.set(
+      0,
+      5.7,
+      65
+    );
+
+    controls.target.set(
+      0,
+      0,
+      0
+    );
+
+    gsap.to(
+      camera.position,
+      {
+
+        x:0,
+        y:5.7,
+        z:32,
+
+        duration:2.8,
+
+        ease:"power3.inOut",
+
+        onUpdate:()=>{
+          camera.lookAt(
+            0,
+            0,
+            0
+          );
+        },
+
+        onComplete:()=>{
+          controls.enabled=true;
+        }
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================================================
+   INITIAL STATE
+========================================================= */
+
+controls.enabled=false;
+
+updateProgress();
+
+
+/* =========================================================
+   SHOOTING STARS
+========================================================= */
+
+function shootingStar(){
+
+  if(
+    !universeActive ||
+    endingActive ||
+    finalActive
+  )
+    return;
+
+
+  const material =
+    new THREE.LineBasicMaterial({
+      color:0xffffff,
+      transparent:true,
+      opacity:.7
+    });
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+  const start =
+    new THREE.Vector3(
+      (Math.random()-.5)*55,
+      15+Math.random()*20,
+      (Math.random()-.5)*55
+    );
+
+  const end =
+    start.clone().add(
+      new THREE.Vector3(
+        -3-Math.random()*5,
+        -2-Math.random()*3,
+        -3-Math.random()*5
+      )
+    );
+
+
+  geometry.setFromPoints([
+    start,
+    end
+  ]);
+
+
+  const line =
+    new THREE.Line(
+      geometry,
+      material
+    );
+
+  scene.add(line);
+
+
+  gsap.fromTo(
+    material,
+    {
+      opacity:0
+    },
+    {
+      opacity:.8,
+      duration:.2,
+      onComplete:()=>{
+
+        gsap.to(
+          material,
+          {
+            opacity:0,
+            duration:.5,
+            onComplete:()=>{
+
+              scene.remove(line);
+
+              geometry.dispose();
+              material.dispose();
+
+            }
+          }
+        );
+
+      }
+    }
+  );
+
+}
+
+
+function shootingLoop(){
+
+  const delay =
+    2200 +
+    Math.random()*3500;
+
+  setTimeout(
+    ()=>{
+      shootingStar();
+      shootingLoop();
+    },
+    delay
+  );
+
+}
+
+shootingLoop();
+
+
+/* =========================================================
+   ANIMATION LOOP
+========================================================= */
+
+const clock =
+  new THREE.Clock();
+
+
+function animate(){
+
+  requestAnimationFrame(
+    animate
+  );
+
+  const elapsed =
+    clock.getElapsedTime();
+
+
+  galaxyGroup.rotation.y =
+    elapsed*.008;
+
+
+  stars.rotation.y =
+    elapsed*.0012;
+
+
+  core.scale.setScalar(
+    1 +
+    Math.sin(elapsed*1.4)*.035
+  );
+
+
+  coreGlow.scale.setScalar(
+    10 +
+    Math.sin(elapsed*1.1)*.4
+  );
+
+
+  planetObjects.forEach(
+    (planet,index)=>{
+
+      const memory =
+        memories[index];
+
+      /*
+        Floating motion.
+      */
+
+      planet.position.y =
+        memory.height +
+        Math.sin(
+          elapsed*.65 +
+          index*1.4
+        )*.08;
+
+
+      planet.rotation.y +=
+        .0025;
+
+
+      /*
+        Only gently animate
+        planets that are NOT selected.
+      */
+
+      if(index !== selectedPlanet){
+
+        planet.children
+          .forEach(child=>{
+
+            if(
+              child.type ===
+              "Mesh"
+            ){
+
+              child.rotation.z +=
+                .0007;
+
+            }
+
+          });
+
+      }
+
+    }
+  );
+
+
+  if(
+    universeActive &&
+    !cameraAnimating
+  ){
+
+    controls.update();
+
+  }
+
+
+  composer.render();
+
+}
+
+
+animate();
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    camera.aspect =
+      innerWidth /
+      innerHeight;
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+      innerWidth,
+      innerHeight
+    );
+
+    renderer.setPixelRatio(
+      Math.min(
+        devicePixelRatio,
+        1.35
+      )
+    );
+
+
+    composer.setSize(
+      innerWidth,
+      innerHeight
+    );
+
+  }
+);
+
+
+/* =========================================================
+   MEMORY BUTTON
+========================================================= */
+
+memoryButton.addEventListener(
+  "click",
+  closeMemory
+);
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+window.addEventListener(
+  "load",
+  ()=>{
+
+    setTimeout(
+      ()=>{
+
+        gsap.to(
+          loading,
+          {
+            opacity:0,
+            duration:.8,
+            onComplete:()=>{
+              loading.style.display =
+                "none";
+            }
+          }
+        );
+
+      },
+      500
+    );
+
+  }
+);
+
+</script>
+
+</body>
+</html>
