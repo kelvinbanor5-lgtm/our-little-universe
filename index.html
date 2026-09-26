@@ -1,0 +1,4385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
+<meta name="theme-color" content="#02020a">
+
+<title>Our Little Universe — V7</title>
+
+<!-- =====================================================
+     THREE.JS IMPORT MAP
+====================================================== -->
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+  }
+}
+</script>
+
+<!-- GSAP -->
+<script
+  src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"
+></script>
+
+<!-- =====================================================
+     GLOBAL ERROR / BOOT PROTECTION
+     
+     IMPORTANT:
+     This script is NOT a module.
+     Therefore it can catch errors even if Three.js
+     fails before the module starts.
+====================================================== -->
+
+<script>
+
+window.__UNIVERSE_STARTED = false;
+window.__UNIVERSE_FAILED = false;
+
+function showUniverseError(message) {
+
+  if (window.__UNIVERSE_FAILED) return;
+
+  window.__UNIVERSE_FAILED = true;
+
+  console.error("UNIVERSE ERROR:", message);
+
+  const loading =
+    document.getElementById("loading");
+
+  if (!loading) return;
+
+  loading.innerHTML = `
+    <div style="
+      max-width:340px;
+      padding:30px;
+      text-align:center;
+      color:white;
+      font-family:Arial,Helvetica,sans-serif;
+    ">
+
+      <div style="
+        font-size:10px;
+        letter-spacing:4px;
+        text-transform:uppercase;
+        opacity:.45;
+        margin-bottom:18px;
+      ">
+        Universe Error
+      </div>
+
+      <div style="
+        font-size:14px;
+        line-height:1.7;
+        opacity:.75;
+      ">
+        Something prevented the 3D universe
+        from starting.
+      </div>
+
+      <div style="
+        margin-top:18px;
+        font-size:10px;
+        line-height:1.6;
+        opacity:.35;
+        word-break:break-word;
+      ">
+        ${String(message || "Unknown error")}
+      </div>
+
+      <button
+        onclick="location.reload()"
+        style="
+          margin-top:24px;
+          padding:11px 20px;
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,.2);
+          background:rgba(255,255,255,.05);
+          color:white;
+          font-size:9px;
+          letter-spacing:2px;
+          text-transform:uppercase;
+          cursor:pointer;
+        "
+      >
+        Reload
+      </button>
+
+    </div>
+  `;
+
+  loading.style.opacity = "1";
+  loading.style.display = "flex";
+}
+
+
+/* Catch normal JavaScript errors */
+
+window.addEventListener("error", event => {
+
+  if (
+    event.filename &&
+    event.filename.includes("chrome-extension")
+  ) {
+    return;
+  }
+
+  if (!window.__UNIVERSE_STARTED) {
+
+    showUniverseError(
+      event.message ||
+      "A JavaScript error prevented startup."
+    );
+
+  }
+
+});
+
+
+/* Catch failed ES module imports */
+
+window.addEventListener(
+  "unhandledrejection",
+  event => {
+
+    if (!window.__UNIVERSE_STARTED) {
+
+      const reason =
+        event.reason?.message ||
+        String(event.reason) ||
+        "A module failed to load.";
+
+      showUniverseError(reason);
+
+    }
+
+  }
+);
+
+
+/*
+   If the module has not started after 8 seconds,
+   show a useful error instead of leaving the user
+   staring at "Building your universe".
+*/
+
+setTimeout(() => {
+
+  if (!window.__UNIVERSE_STARTED &&
+      !window.__UNIVERSE_FAILED) {
+
+    showUniverseError(
+      "The 3D engine did not start. Check your internet connection or GitHub Pages deployment."
+    );
+
+  }
+
+}, 8000);
+
+</script>
+
+
+<style>
+
+/* =====================================================
+   RESET
+====================================================== */
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+
+  margin: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  background: #010108;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  color: white;
+
+}
+
+button {
+  font: inherit;
+}
+
+#app {
+
+  position: fixed;
+
+  inset: 0;
+
+  overflow: hidden;
+
+  background: #010108;
+
+}
+
+
+/* =====================================================
+   THREE.JS CANVAS
+====================================================== */
+
+#galaxyCanvas {
+
+  position: fixed;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  touch-action: none;
+
+}
+
+
+/* =====================================================
+   LOADING
+====================================================== */
+
+#loading {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 10000;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-direction: column;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #11112b 0%,
+      #04040d 42%,
+      #010108 100%
+    );
+
+  transition:
+    opacity .8s ease;
+
+}
+
+.loading-core {
+
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+
+  border:
+    1px solid
+    rgba(255,255,255,.35);
+
+  box-shadow:
+    0 0 20px
+      rgba(150,120,255,.7),
+
+    0 0 60px
+      rgba(90,60,255,.4);
+
+  animation:
+    loadingPulse 1.4s
+    infinite
+    ease-in-out;
+
+}
+
+.loading-text {
+
+  margin-top: 24px;
+
+  font-size: 11px;
+
+  letter-spacing: 5px;
+
+  text-transform: uppercase;
+
+  opacity: .65;
+
+}
+
+@keyframes loadingPulse {
+
+  0%,100% {
+
+    transform: scale(.8);
+
+    opacity: .45;
+
+  }
+
+  50% {
+
+    transform: scale(1.12);
+
+    opacity: 1;
+
+  }
+
+}
+
+
+/* =====================================================
+   INTRO
+====================================================== */
+
+#intro {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 500;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  background:
+
+    radial-gradient(
+      circle at 50% 42%,
+      rgba(100,70,255,.14),
+      transparent 32%
+    ),
+
+    #02020a;
+
+}
+
+.intro-inner {
+
+  width:
+    min(90%, 500px);
+
+}
+
+.intro-eyebrow {
+
+  font-size: 10px;
+
+  letter-spacing: 6px;
+
+  text-transform: uppercase;
+
+  opacity: .5;
+
+  margin-bottom: 22px;
+
+}
+
+.intro-title {
+
+  margin: 0;
+
+  font-size:
+    clamp(40px, 12vw, 82px);
+
+  font-weight: 300;
+
+  letter-spacing: -4px;
+
+  line-height: .9;
+
+}
+
+.intro-title span {
+
+  display: block;
+
+  background:
+
+    linear-gradient(
+      120deg,
+      #fff,
+      #bdb2ff,
+      #fff,
+      #8e7cff
+    );
+
+  -webkit-background-clip: text;
+
+  background-clip: text;
+
+  color: transparent;
+
+}
+
+.intro-subtitle {
+
+  margin:
+    28px auto 40px;
+
+  max-width: 340px;
+
+  line-height: 1.7;
+
+  font-size: 13px;
+
+  opacity: .58;
+
+}
+
+.enter-btn {
+
+  border:
+    1px solid
+    rgba(255,255,255,.28);
+
+  background:
+    rgba(255,255,255,.045);
+
+  color: white;
+
+  padding:
+    15px 30px;
+
+  border-radius: 999px;
+
+  letter-spacing: 3px;
+
+  text-transform: uppercase;
+
+  font-size: 10px;
+
+  cursor: pointer;
+
+  backdrop-filter:
+    blur(15px);
+
+  transition: .3s;
+
+}
+
+.enter-btn:hover {
+
+  background:
+    rgba(255,255,255,.12);
+
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 0 35px
+    rgba(140,110,255,.2);
+
+}
+
+
+/* =====================================================
+   HUD
+====================================================== */
+
+#hud {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 20;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+}
+
+.hud-top {
+
+  position: absolute;
+
+  top: 25px;
+
+  left: 25px;
+  right: 25px;
+
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  align-items:
+    flex-start;
+
+}
+
+.hud-title {
+
+  font-size: 10px;
+
+  letter-spacing: 4px;
+
+  text-transform: uppercase;
+
+  opacity: .65;
+
+}
+
+.hud-status {
+
+  font-size: 9px;
+
+  letter-spacing: 2px;
+
+  text-transform: uppercase;
+
+  opacity: .35;
+
+}
+
+.hud-bottom {
+
+  position: absolute;
+
+  left: 50%;
+
+  bottom: 27px;
+
+  transform:
+    translateX(-50%);
+
+  text-align: center;
+
+  width: 90%;
+
+}
+
+.hud-instruction {
+
+  font-size: 10px;
+
+  letter-spacing: 2px;
+
+  text-transform: uppercase;
+
+  opacity: .42;
+
+}
+
+
+/* =====================================================
+   PLANET LABELS
+====================================================== */
+
+#planetLabels {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 15;
+
+  pointer-events: none;
+
+}
+
+.memory-label {
+
+  position: absolute;
+
+  transform:
+    translate(-50%, -50%);
+
+  text-align: center;
+
+  opacity: 0;
+
+  transition:
+    opacity .3s ease;
+
+  white-space: nowrap;
+
+}
+
+.memory-label strong {
+
+  display: block;
+
+  font-size: 10px;
+
+  letter-spacing: 3px;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 0 12px
+    rgba(255,255,255,.8);
+
+}
+
+.memory-label small {
+
+  display: block;
+
+  margin-top: 5px;
+
+  font-size: 8px;
+
+  letter-spacing: 1px;
+
+  opacity: .55;
+
+}
+
+
+/* =====================================================
+   MEMORY SCREENS
+====================================================== */
+
+.memory-screen {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 400;
+
+  display: none;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 25px;
+
+  background:
+
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(70,50,150,.18),
+      transparent 40%
+    ),
+
+    rgba(2,2,10,.97);
+
+}
+
+.memory-content {
+
+  width:
+    min(90vw, 480px);
+
+  text-align: center;
+
+}
+
+.memory-number {
+
+  font-size: 9px;
+
+  letter-spacing: 5px;
+
+  text-transform: uppercase;
+
+  opacity: .35;
+
+  margin-bottom: 16px;
+
+}
+
+.memory-title {
+
+  font-size:
+    clamp(30px, 8vw, 54px);
+
+  font-weight: 300;
+
+  margin:
+    0 0 16px;
+
+  letter-spacing: -2px;
+
+}
+
+.memory-text {
+
+  font-size: 13px;
+
+  line-height: 1.8;
+
+  opacity: .65;
+
+  margin:
+    0 auto 25px;
+
+  max-width: 390px;
+
+}
+
+.memory-image {
+
+  display: block;
+
+  width: 100%;
+
+  max-height: 48vh;
+
+  object-fit: cover;
+
+  border-radius: 22px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.14);
+
+  box-shadow:
+
+    0 25px 90px
+      rgba(0,0,0,.55),
+
+    0 0 60px
+      rgba(100,70,255,.12);
+
+}
+
+.memory-back,
+.video-next {
+
+  margin-top: 22px;
+
+  padding:
+    12px 24px;
+
+  border-radius: 999px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.2);
+
+  background:
+    rgba(255,255,255,.04);
+
+  color: white;
+
+  font-size: 9px;
+
+  letter-spacing: 3px;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+}
+
+
+/* =====================================================
+   VIDEO
+====================================================== */
+
+#endingScreen {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 450;
+
+  display: none;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: #000;
+
+}
+
+#endingVideo {
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+}
+
+.ending-overlay {
+
+  position: absolute;
+
+  bottom: 30px;
+
+  left: 0;
+  right: 0;
+
+  text-align: center;
+
+}
+
+
+/* =====================================================
+   FINAL
+====================================================== */
+
+#finalScreen {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 600;
+
+  display: none;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  background:
+
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(120,90,255,.22),
+      transparent 30%
+    ),
+
+    #010108;
+
+}
+
+.final-core {
+
+  width: 80px;
+  height: 80px;
+
+  margin:
+    0 auto 35px;
+
+  border-radius: 50%;
+
+  background:
+
+    radial-gradient(
+      circle,
+      #fff 0%,
+      #d9d0ff 8%,
+      #7660ff 35%,
+      transparent 70%
+    );
+
+  filter:
+    blur(.2px);
+
+  box-shadow:
+
+    0 0 35px
+      rgba(160,140,255,.9),
+
+    0 0 120px
+      rgba(90,60,255,.55);
+
+  animation:
+    finalPulse 3s
+    infinite
+    ease-in-out;
+
+}
+
+.final-small {
+
+  font-size: 9px;
+
+  letter-spacing: 6px;
+
+  text-transform: uppercase;
+
+  opacity: .45;
+
+}
+
+.final-name {
+
+  margin:
+    15px 0;
+
+  font-size:
+    clamp(55px, 16vw, 110px);
+
+  font-weight: 200;
+
+  letter-spacing: -5px;
+
+  background:
+
+    linear-gradient(
+      120deg,
+      #fff,
+      #a99aff,
+      #fff
+    );
+
+  -webkit-background-clip: text;
+
+  background-clip: text;
+
+  color: transparent;
+
+}
+
+.final-message {
+
+  font-size: 12px;
+
+  opacity: .5;
+
+  letter-spacing: 1px;
+
+}
+
+@keyframes finalPulse {
+
+  0%,100% {
+    transform: scale(.92);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+}
+
+
+/* =====================================================
+   ERROR
+====================================================== */
+
+#errorScreen {
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 2000;
+
+  display: none;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 30px;
+
+  background: #02020a;
+
+}
+
+
+/* =====================================================
+   MOBILE
+====================================================== */
+
+@media (max-width:600px) {
+
+  .hud-top {
+
+    top: 18px;
+
+    left: 18px;
+    right: 18px;
+
+  }
+
+  .hud-bottom {
+
+    bottom: 20px;
+
+  }
+
+  .memory-content {
+
+    width: 92vw;
+
+  }
+
+  .memory-image {
+
+    max-height: 42vh;
+
+  }
+
+  .intro-title {
+
+    letter-spacing: -3px;
+
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div id="app">
+
+
+<!-- =====================================================
+     LOADING
+====================================================== -->
+
+<div id="loading">
+
+  <div class="loading-core"></div>
+
+  <div class="loading-text">
+    Building your universe
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     INTRO
+====================================================== -->
+
+<section id="intro">
+
+  <div class="intro-inner">
+
+    <div class="intro-eyebrow">
+      A little universe
+    </div>
+
+    <h1 class="intro-title">
+
+      <span>Our</span>
+
+      <span>Little</span>
+
+      <span>Universe</span>
+
+    </h1>
+
+    <p class="intro-subtitle">
+
+      Some memories are too special
+      to keep in one place.
+
+      So I made them their own universe.
+
+    </p>
+
+    <button
+      class="enter-btn"
+      id="enterBtn"
+    >
+
+      Enter the universe
+
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     THREE CANVAS
+====================================================== -->
+
+<canvas id="galaxyCanvas"></canvas>
+
+
+<!-- =====================================================
+     HUD
+====================================================== -->
+
+<div id="hud">
+
+  <div class="hud-top">
+
+    <div class="hud-title">
+      Our Little Universe
+    </div>
+
+    <div class="hud-status">
+      V7 • 3D MEMORY SPACE
+    </div>
+
+  </div>
+
+
+  <div class="hud-bottom">
+
+    <div class="hud-instruction">
+      Touch a planet to open a memory
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =====================================================
+     PLANET LABELS
+====================================================== -->
+
+<div id="planetLabels"></div>
+
+
+<!-- =====================================================
+     MEMORY 1
+====================================================== -->
+
+<section
+  class="memory-screen"
+  id="memory1"
+>
+
+  <div class="memory-content">
+
+    <div class="memory-number">
+      Memory 01
+    </div>
+
+    <h2 class="memory-title">
+      That Smile
+    </h2>
+
+    <p class="memory-text">
+
+      There are some little things
+      that somehow become your
+      favorite things without you
+      even noticing.
+
+    </p>
+
+    <img
+      class="memory-image"
+      src="smile.JPG"
+      alt="A memory"
+      loading="eager"
+    >
+
+    <button class="memory-back">
+      Return to the universe
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     MEMORY 2
+====================================================== -->
+
+<section
+  class="memory-screen"
+  id="memory2"
+>
+
+  <div class="memory-content">
+
+    <div class="memory-number">
+      Memory 02
+    </div>
+
+    <h2 class="memory-title">
+      Our Calls
+    </h2>
+
+    <p class="memory-text">
+
+      Somehow even the random
+      conversations became memories
+      worth keeping.
+
+    </p>
+
+    <img
+      class="memory-image"
+      src="calls.jpeg"
+      alt="A memory"
+      loading="eager"
+    >
+
+    <button class="memory-back">
+      Return to the universe
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     MEMORY 3
+====================================================== -->
+
+<section
+  class="memory-screen"
+  id="memory3"
+>
+
+  <div class="memory-content">
+
+    <div class="memory-number">
+      Memory 03
+    </div>
+
+    <h2 class="memory-title">
+      Random Memories
+    </h2>
+
+    <p class="memory-text">
+
+      The moments we never planned
+      are sometimes the ones that stay
+      with us the longest.
+
+    </p>
+
+    <img
+      class="memory-image"
+      src="memory.JPG"
+      alt="A memory"
+      loading="eager"
+    >
+
+    <button class="memory-back">
+      Return to the universe
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     MEMORY 4
+====================================================== -->
+
+<section
+  class="memory-screen"
+  id="memory4"
+>
+
+  <div class="memory-content">
+
+    <div class="memory-number">
+      Memory 04
+    </div>
+
+    <h2 class="memory-title">
+      The Beginning
+    </h2>
+
+    <p class="memory-text">
+
+      I didn't know where this was
+      going when everything started.
+
+      I just knew I wanted to keep
+      talking.
+
+    </p>
+
+    <button class="memory-back">
+      Return to the universe
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     MEMORY 5
+====================================================== -->
+
+<section
+  class="memory-screen"
+  id="memory5"
+>
+
+  <div class="memory-content">
+
+    <div class="memory-number">
+      Memory 05
+    </div>
+
+    <h2 class="memory-title">
+      The Little Things
+    </h2>
+
+    <p class="memory-text">
+
+      It's funny how the smallest
+      moments can slowly become
+      the biggest memories.
+
+    </p>
+
+    <button class="memory-back">
+      Return to the universe
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     MEMORY 6
+====================================================== -->
+
+<section
+  class="memory-screen"
+  id="memory6"
+>
+
+  <div class="memory-content">
+
+    <div class="memory-number">
+      Memory 06
+    </div>
+
+    <h2 class="memory-title">
+      Still Here
+    </h2>
+
+    <p class="memory-text">
+
+      And somehow, after everything,
+      there are still more memories
+      waiting to be made.
+
+    </p>
+
+    <button class="memory-back">
+      Return to the universe
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     ENDING VIDEO
+====================================================== -->
+
+<section id="endingScreen">
+
+  <video
+    id="endingVideo"
+    src="ending.MP4"
+    playsinline
+    preload="metadata"
+  ></video>
+
+  <div class="ending-overlay">
+
+    <button
+      class="video-next"
+      id="finishVideo"
+    >
+      Continue
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     FINAL
+====================================================== -->
+
+<section id="finalScreen">
+
+  <div>
+
+    <div class="final-core"></div>
+
+    <div class="final-small">
+      At the center of it all
+    </div>
+
+    <div class="final-name">
+      NOVA
+    </div>
+
+    <div class="final-message">
+      You are part of my little universe.
+    </div>
+
+  </div>
+
+</section>
+
+
+</div>
+
+
+<!-- =====================================================
+     THREE.JS APPLICATION
+====================================================== -->
+
+<script type="module">
+
+/* =====================================================
+   IMPORTS
+====================================================== */
+
+import * as THREE from "three";
+
+import {
+  EffectComposer
+} from "three/addons/postprocessing/EffectComposer.js";
+
+import {
+  RenderPass
+} from "three/addons/postprocessing/RenderPass.js";
+
+import {
+  UnrealBloomPass
+} from "three/addons/postprocessing/UnrealBloomPass.js";
+
+
+/*
+   If execution reaches this point,
+   the Three.js modules successfully loaded.
+*/
+
+window.__UNIVERSE_STARTED = true;
+
+
+/* =====================================================
+   GSAP
+====================================================== */
+
+const gsap = window.gsap;
+
+if (!gsap) {
+
+  throw new Error(
+    "GSAP failed to load."
+  );
+
+}
+
+
+/* =====================================================
+   BASIC SETUP
+====================================================== */
+
+const canvas =
+  document.getElementById(
+    "galaxyCanvas"
+  );
+
+
+const scene =
+  new THREE.Scene();
+
+scene.background =
+  new THREE.Color(
+    0x010108
+  );
+
+
+const camera =
+  new THREE.PerspectiveCamera(
+    55,
+    window.innerWidth /
+      window.innerHeight,
+    0.1,
+    500
+  );
+
+
+camera.position.set(
+  0,
+  6,
+  32
+);
+
+
+const renderer =
+  new THREE.WebGLRenderer({
+
+    canvas,
+
+    antialias: true,
+
+    powerPreference:
+      "high-performance",
+
+    alpha: false
+
+  });
+
+
+renderer.setSize(
+  window.innerWidth,
+  window.innerHeight
+);
+
+
+renderer.setPixelRatio(
+  Math.min(
+    window.devicePixelRatio || 1,
+    1.5
+  )
+);
+
+
+renderer.outputColorSpace =
+  THREE.SRGBColorSpace;
+
+
+renderer.toneMapping =
+  THREE.ACESFilmicToneMapping;
+
+
+renderer.toneMappingExposure =
+  1.25;
+
+
+/* =====================================================
+   BLOOM
+====================================================== */
+
+const renderPass =
+  new RenderPass(
+    scene,
+    camera
+  );
+
+
+const bloomPass =
+  new UnrealBloomPass(
+
+    new THREE.Vector2(
+      window.innerWidth,
+      window.innerHeight
+    ),
+
+    1.45,
+
+    0.8,
+
+    0.12
+
+  );
+
+
+const composer =
+  new EffectComposer(
+    renderer
+  );
+
+
+composer.addPass(
+  renderPass
+);
+
+
+composer.addPass(
+  bloomPass
+);
+
+
+/* =====================================================
+   LIGHTING
+====================================================== */
+
+const ambientLight =
+  new THREE.AmbientLight(
+    0x6c63a8,
+    0.22
+  );
+
+
+scene.add(
+  ambientLight
+);
+
+
+const coreLight =
+  new THREE.PointLight(
+    0xb9a8ff,
+    160,
+    70
+  );
+
+
+coreLight.position.set(
+  0,
+  0,
+  0
+);
+
+
+scene.add(
+  coreLight
+);
+
+
+/* =====================================================
+   STAR FIELD
+====================================================== */
+
+function createStarField() {
+
+  const mobile =
+    window.innerWidth < 700 ||
+    /Android|iPhone|iPad|iPod/i.test(
+      navigator.userAgent
+    );
+
+
+  const count =
+    mobile
+      ? 2600
+      : 5200;
+
+
+  const positions =
+    new Float32Array(
+      count * 3
+    );
+
+
+  const colors =
+    new Float32Array(
+      count * 3
+    );
+
+
+  const colorChoices = [
+
+    new THREE.Color(
+      0xffffff
+    ),
+
+    new THREE.Color(
+      0xb9b3ff
+    ),
+
+    new THREE.Color(
+      0x9fd9ff
+    ),
+
+    new THREE.Color(
+      0xffe5c4
+    )
+
+  ];
+
+
+  for (
+    let i = 0;
+    i < count;
+    i++
+  ) {
+
+    const radius =
+      45 +
+      Math.random() *
+      120;
+
+
+    const theta =
+      Math.random() *
+      Math.PI *
+      2;
+
+
+    const phi =
+      Math.acos(
+        2 *
+        Math.random() -
+        1
+      );
+
+
+    const x =
+      radius *
+      Math.sin(phi) *
+      Math.cos(theta);
+
+
+    const y =
+      radius *
+      Math.cos(phi);
+
+
+    const z =
+      radius *
+      Math.sin(phi) *
+      Math.sin(theta);
+
+
+    positions[
+      i * 3
+    ] = x;
+
+
+    positions[
+      i * 3 + 1
+    ] = y;
+
+
+    positions[
+      i * 3 + 2
+    ] = z;
+
+
+    const color =
+      colorChoices[
+        Math.floor(
+          Math.random() *
+          colorChoices.length
+        )
+      ];
+
+
+    colors[
+      i * 3
+    ] = color.r;
+
+
+    colors[
+      i * 3 + 1
+    ] = color.g;
+
+
+    colors[
+      i * 3 + 2
+    ] = color.b;
+
+  }
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  geometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(
+      colors,
+      3
+    )
+  );
+
+
+  const material =
+    new THREE.PointsMaterial({
+
+      size: 0.65,
+
+      vertexColors: true,
+
+      transparent: true,
+
+      opacity: .9,
+
+      depthWrite: false,
+
+      blending:
+        THREE.AdditiveBlending,
+
+      sizeAttenuation: true
+
+    });
+
+
+  const stars =
+    new THREE.Points(
+      geometry,
+      material
+    );
+
+
+  scene.add(
+    stars
+  );
+
+
+  return stars;
+
+}
+
+
+const starField =
+  createStarField();
+
+
+/* =====================================================
+   GALAXY
+====================================================== */
+
+function createGalaxy() {
+
+  const mobile =
+    window.innerWidth < 700 ||
+    /Android|iPhone|iPad|iPod/i.test(
+      navigator.userAgent
+    );
+
+
+  const count =
+    mobile
+      ? 5200
+      : 10000;
+
+
+  const positions =
+    new Float32Array(
+      count * 3
+    );
+
+
+  const colors =
+    new Float32Array(
+      count * 3
+    );
+
+
+  const colorA =
+    new THREE.Color(
+      0x8070ff
+    );
+
+
+  const colorB =
+    new THREE.Color(
+      0xff8bd4
+    );
+
+
+  const colorC =
+    new THREE.Color(
+      0x89d9ff
+    );
+
+
+  const colorD =
+    new THREE.Color(
+      0xffffff
+    );
+
+
+  for (
+    let i = 0;
+    i < count;
+    i++
+  ) {
+
+    const radius =
+      Math.pow(
+        Math.random(),
+        .72
+      ) *
+      28;
+
+
+    const arm =
+      i % 5;
+
+
+    const armAngle =
+      arm *
+      (
+        (Math.PI * 2) /
+        5
+      );
+
+
+    const spiral =
+      radius *
+      .30;
+
+
+    const angle =
+      armAngle +
+      spiral +
+      (
+        Math.random() -
+        .5
+      ) *
+      (
+        .45 +
+        radius *
+        .015
+      );
+
+
+    const thickness =
+      (
+        Math.random() -
+        .5
+      ) *
+      (
+        1.3 +
+        (
+          1 -
+          radius / 28
+        ) *
+        2
+      );
+
+
+    const x =
+      Math.cos(angle) *
+      radius +
+      Math.cos(
+        angle +
+        Math.PI / 2
+      ) *
+      thickness;
+
+
+    const z =
+      Math.sin(angle) *
+      radius +
+      Math.sin(
+        angle +
+        Math.PI / 2
+      ) *
+      thickness;
+
+
+    const y =
+      (
+        Math.random() -
+        .5
+      ) *
+      (
+        1.8 +
+        (
+          1 -
+          radius / 28
+        ) *
+        1.7
+      );
+
+
+    positions[
+      i * 3
+    ] = x;
+
+
+    positions[
+      i * 3 + 1
+    ] = y;
+
+
+    positions[
+      i * 3 + 2
+    ] = z;
+
+
+    const r =
+      Math.random();
+
+
+    let color;
+
+
+    if (r < .28) {
+
+      color = colorA;
+
+    }
+
+    else if (r < .55) {
+
+      color = colorB;
+
+    }
+
+    else if (r < .78) {
+
+      color = colorC;
+
+    }
+
+    else {
+
+      color = colorD;
+
+    }
+
+
+    colors[
+      i * 3
+    ] = color.r;
+
+
+    colors[
+      i * 3 + 1
+    ] = color.g;
+
+
+    colors[
+      i * 3 + 2
+    ] = color.b;
+
+  }
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  geometry.setAttribute(
+    "color",
+    new THREE.BufferAttribute(
+      colors,
+      3
+    )
+  );
+
+
+  const material =
+    new THREE.PointsMaterial({
+
+      size: .18,
+
+      vertexColors: true,
+
+      transparent: true,
+
+      opacity: .7,
+
+      depthWrite: false,
+
+      blending:
+        THREE.AdditiveBlending
+
+    });
+
+
+  const galaxy =
+    new THREE.Points(
+      geometry,
+      material
+    );
+
+
+  scene.add(
+    galaxy
+  );
+
+
+  return galaxy;
+
+}
+
+
+const galaxy =
+  createGalaxy();
+
+
+/* =====================================================
+   GALAXY DUST
+====================================================== */
+
+function createDust() {
+
+  const count =
+    window.innerWidth < 700
+      ? 1400
+      : 2800;
+
+
+  const positions =
+    new Float32Array(
+      count * 3
+    );
+
+
+  for (
+    let i = 0;
+    i < count;
+    i++
+  ) {
+
+    const radius =
+      Math.random() *
+      25;
+
+
+    const angle =
+      Math.random() *
+      Math.PI *
+      2;
+
+
+    positions[
+      i * 3
+    ] =
+      Math.cos(angle) *
+      radius;
+
+
+    positions[
+      i * 3 + 1
+    ] =
+      (
+        Math.random() -
+        .5
+      ) *
+      2.5;
+
+
+    positions[
+      i * 3 + 2
+    ] =
+      Math.sin(angle) *
+      radius;
+
+  }
+
+
+  const geometry =
+    new THREE.BufferGeometry();
+
+
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(
+      positions,
+      3
+    )
+  );
+
+
+  const material =
+    new THREE.PointsMaterial({
+
+      color: 0x9b87ff,
+
+      size: .12,
+
+      transparent: true,
+
+      opacity: .3,
+
+      depthWrite: false,
+
+      blending:
+        THREE.AdditiveBlending
+
+    });
+
+
+  const dust =
+    new THREE.Points(
+      geometry,
+      material
+    );
+
+
+  scene.add(
+    dust
+  );
+
+
+  return dust;
+
+}
+
+
+const dust =
+  createDust();
+
+
+/* =====================================================
+   CORE
+====================================================== */
+
+const coreGroup =
+  new THREE.Group();
+
+
+scene.add(
+  coreGroup
+);
+
+
+const coreGeometry =
+  new THREE.SphereGeometry(
+    1.7,
+    48,
+    48
+  );
+
+
+const coreMaterial =
+  new THREE.MeshBasicMaterial({
+
+    color:
+      0xffffff
+
+  });
+
+
+const core =
+  new THREE.Mesh(
+    coreGeometry,
+    coreMaterial
+  );
+
+
+coreGroup.add(
+  core
+);
+
+
+/* =====================================================
+   CORE GLOW
+====================================================== */
+
+function createGlowTexture() {
+
+  const c =
+    document.createElement(
+      "canvas"
+    );
+
+
+  c.width = 256;
+  c.height = 256;
+
+
+  const ctx =
+    c.getContext(
+      "2d"
+    );
+
+
+  const gradient =
+    ctx.createRadialGradient(
+      128,
+      128,
+      0,
+      128,
+      128,
+      128
+    );
+
+
+  gradient.addColorStop(
+    0,
+    "rgba(255,255,255,1)"
+  );
+
+
+  gradient.addColorStop(
+    .12,
+    "rgba(205,195,255,.9)"
+  );
+
+
+  gradient.addColorStop(
+    .35,
+    "rgba(120,90,255,.45)"
+  );
+
+
+  gradient.addColorStop(
+    1,
+    "rgba(80,50,255,0)"
+  );
+
+
+  ctx.fillStyle =
+    gradient;
+
+
+  ctx.fillRect(
+    0,
+    0,
+    256,
+    256
+  );
+
+
+  return new THREE.CanvasTexture(
+    c
+  );
+
+}
+
+
+const glowMaterial =
+  new THREE.SpriteMaterial({
+
+    map:
+      createGlowTexture(),
+
+    transparent: true,
+
+    blending:
+      THREE.AdditiveBlending,
+
+    depthWrite: false
+
+  });
+
+
+const glow =
+  new THREE.Sprite(
+    glowMaterial
+  );
+
+
+glow.scale.set(
+  10,
+  10,
+  1
+);
+
+
+coreGroup.add(
+  glow
+);
+
+
+/* =====================================================
+   ORBIT RINGS
+====================================================== */
+
+function createOrbit(
+  radius
+) {
+
+  const points = [];
+
+  const segments =
+    160;
+
+
+  for (
+    let i = 0;
+    i <= segments;
+    i++
+  ) {
+
+    const angle =
+      (
+        i /
+        segments
+      ) *
+      Math.PI *
+      2;
+
+
+    points.push(
+
+      new THREE.Vector3(
+
+        Math.cos(angle) *
+          radius,
+
+        0,
+
+        Math.sin(angle) *
+          radius
+
+      )
+
+    );
+
+  }
+
+
+  const geometry =
+    new THREE.BufferGeometry()
+      .setFromPoints(
+        points
+      );
+
+
+  const material =
+    new THREE.LineBasicMaterial({
+
+      color:
+        0x7567d9,
+
+      transparent:
+        true,
+
+      opacity:
+        .18
+
+    });
+
+
+  const ring =
+    new THREE.LineLoop(
+      geometry,
+      material
+    );
+
+
+  scene.add(
+    ring
+  );
+
+
+  return ring;
+
+}
+
+
+const orbit1 =
+  createOrbit(
+    7.5
+  );
+
+
+const orbit2 =
+  createOrbit(
+    13
+  );
+
+
+const orbit3 =
+  createOrbit(
+    19
+  );
+
+
+orbit1.rotation.x =
+  .15;
+
+
+orbit2.rotation.x =
+  -.08;
+
+
+orbit3.rotation.x =
+  .12;
+
+
+/* =====================================================
+   MEMORY DATA
+====================================================== */
+
+const memories = [
+
+  {
+    id: 1,
+    title: "That Smile",
+    subtitle: "A little moment",
+    radius: 7.5,
+    angle: .4,
+    size: .72,
+    color: 0xffb3d9
+  },
+
+  {
+    id: 2,
+    title: "Our Calls",
+    subtitle: "Hours somehow disappeared",
+    radius: 7.5,
+    angle: 2.4,
+    size: .9,
+    color: 0x8dcaff
+  },
+
+  {
+    id: 3,
+    title: "Random Memories",
+    subtitle: "The unexpected ones",
+    radius: 13,
+    angle: 1.3,
+    size: 1.02,
+    color: 0xb59cff
+  },
+
+  {
+    id: 4,
+    title: "The Beginning",
+    subtitle: "Where everything started",
+    radius: 13,
+    angle: 4.1,
+    size: .78,
+    color: 0xffc58c
+  },
+
+  {
+    id: 5,
+    title: "The Little Things",
+    subtitle: "The details that stayed",
+    radius: 19,
+    angle: 2.7,
+    size: 1.18,
+    color: 0x9cf0db
+  },
+
+  {
+    id: 6,
+    title: "Still Here",
+    subtitle: "More memories ahead",
+    radius: 19,
+    angle: 5.2,
+    size: .95,
+    color: 0xd3b5ff
+  }
+
+];
+
+
+const planetGroups = [];
+
+
+/* =====================================================
+   PLANETS
+====================================================== */
+
+function createPlanet(
+  memory,
+  index
+) {
+
+  const group =
+    new THREE.Group();
+
+
+  const geometry =
+    new THREE.SphereGeometry(
+      memory.size,
+      32,
+      32
+    );
+
+
+  const material =
+    new THREE.MeshStandardMaterial({
+
+      color:
+        memory.color,
+
+      emissive:
+        memory.color,
+
+      emissiveIntensity:
+        .32,
+
+      roughness:
+        .48,
+
+      metalness:
+        .18
+
+    });
+
+
+  const planet =
+    new THREE.Mesh(
+      geometry,
+      material
+    );
+
+
+  planet.userData.memoryId =
+    memory.id;
+
+
+  group.add(
+    planet
+  );
+
+
+  /* Atmosphere */
+
+  const atmosphere =
+    new THREE.Mesh(
+
+      new THREE.SphereGeometry(
+        memory.size *
+        1.16,
+        24,
+        24
+      ),
+
+      new THREE.MeshBasicMaterial({
+
+        color:
+          memory.color,
+
+        transparent:
+          true,
+
+        opacity:
+          .09,
+
+        blending:
+          THREE.AdditiveBlending,
+
+        side:
+          THREE.BackSide
+
+      })
+
+    );
+
+
+  atmosphere.userData.memoryId =
+    memory.id;
+
+
+  group.add(
+    atmosphere
+  );
+
+
+  /* Rings */
+
+  if (index % 2 === 1) {
+
+    const ring =
+      new THREE.Mesh(
+
+        new THREE.RingGeometry(
+
+          memory.size *
+            1.35,
+
+          memory.size *
+            1.7,
+
+          64
+
+        ),
+
+        new THREE.MeshBasicMaterial({
+
+          color:
+            memory.color,
+
+          transparent:
+            true,
+
+          opacity:
+            .35,
+
+          side:
+            THREE.DoubleSide,
+
+          blending:
+            THREE.AdditiveBlending
+
+        })
+
+      );
+
+
+    ring.rotation.x =
+      Math.PI /
+      2.6;
+
+
+    ring.userData.memoryId =
+      memory.id;
+
+
+    group.add(
+      ring
+    );
+
+  }
+
+
+  const x =
+    Math.cos(
+      memory.angle
+    ) *
+    memory.radius;
+
+
+  const z =
+    Math.sin(
+      memory.angle
+    ) *
+    memory.radius;
+
+
+  group.position.set(
+
+    x,
+
+    (
+      index % 2 === 0
+        ? 1
+        : -1
+    ) *
+    (
+      .5 +
+      Math.random() *
+      .8
+    ),
+
+    z
+
+  );
+
+
+  group.userData.memory =
+    memory;
+
+
+  scene.add(
+    group
+  );
+
+
+  planetGroups.push(
+    group
+  );
+
+
+  return group;
+
+}
+
+
+memories.forEach(
+  createPlanet
+);
+
+
+/* =====================================================
+   LABELS
+====================================================== */
+
+const labelsContainer =
+  document.getElementById(
+    "planetLabels"
+  );
+
+
+memories.forEach(
+  memory => {
+
+    const label =
+      document.createElement(
+        "div"
+      );
+
+
+    label.className =
+      "memory-label";
+
+
+    label.dataset.id =
+      memory.id;
+
+
+    label.innerHTML = `
+
+      <strong>
+        ${memory.title}
+      </strong>
+
+      <small>
+        ${memory.subtitle}
+      </small>
+
+    `;
+
+
+    labelsContainer.appendChild(
+      label
+    );
+
+  }
+);
+
+
+/* =====================================================
+   SHOOTING STARS
+====================================================== */
+
+const shootingStars = [];
+
+
+function createShootingStar() {
+
+  const geometry =
+    new THREE.BufferGeometry()
+      .setFromPoints([
+
+        new THREE.Vector3(
+          0,
+          0,
+          0
+        ),
+
+        new THREE.Vector3(
+          -2.5,
+          .35,
+          0
+        )
+
+      ]);
+
+
+  const material =
+    new THREE.LineBasicMaterial({
+
+      color:
+        0xffffff,
+
+      transparent:
+        true,
+
+      opacity:
+        0
+
+    });
+
+
+  const line =
+    new THREE.Line(
+      geometry,
+      material
+    );
+
+
+  line.position.set(
+
+    -25 +
+      Math.random() *
+      50,
+
+    8 +
+      Math.random() *
+      18,
+
+    -15 -
+      Math.random() *
+      35
+
+  );
+
+
+  line.rotation.z =
+    -.2 +
+    Math.random() *
+    .4;
+
+
+  scene.add(
+    line
+  );
+
+
+  shootingStars.push(
+    line
+  );
+
+
+  gsap.to(
+    material,
+    {
+      opacity: 1,
+      duration: .15
+    }
+  );
+
+
+  gsap.to(
+    line.position,
+    {
+
+      x:
+        line.position.x +
+        25,
+
+      y:
+        line.position.y -
+        9,
+
+      duration:
+        1.1,
+
+      ease:
+        "power1.in",
+
+      onComplete: () => {
+
+        scene.remove(
+          line
+        );
+
+
+        const index =
+          shootingStars.indexOf(
+            line
+          );
+
+
+        if (index !== -1) {
+
+          shootingStars.splice(
+            index,
+            1
+          );
+
+        }
+
+      }
+
+    }
+  );
+
+
+  gsap.to(
+    material,
+    {
+
+      opacity: 0,
+
+      delay: .65,
+
+      duration: .5
+
+    }
+  );
+
+}
+
+
+function shootingStarLoop() {
+
+  if (
+    galaxyActive
+  ) {
+
+    createShootingStar();
+
+  }
+
+
+  setTimeout(
+    shootingStarLoop,
+    1800 +
+    Math.random() *
+    3500
+  );
+
+}
+
+
+/* =====================================================
+   STATE
+====================================================== */
+
+let galaxyActive =
+  false;
+
+
+let currentMemory =
+  null;
+
+
+let cameraMoving =
+  false;
+
+
+/* =====================================================
+   RAYCASTING
+====================================================== */
+
+const raycaster =
+  new THREE.Raycaster();
+
+
+const pointer =
+  new THREE.Vector2();
+
+
+let pointerDown =
+  false;
+
+
+function getPointerPosition(
+  event
+) {
+
+  const rect =
+    renderer.domElement
+      .getBoundingClientRect();
+
+
+  pointer.x =
+    (
+      (
+        event.clientX -
+        rect.left
+      ) /
+      rect.width
+    ) *
+    2 -
+    1;
+
+
+  pointer.y =
+    -(
+      (
+        event.clientY -
+        rect.top
+      ) /
+      rect.height
+    ) *
+    2 +
+    1;
+
+}
+
+
+function selectPlanet(
+  event
+) {
+
+  if (
+    !galaxyActive ||
+    cameraMoving
+  ) {
+    return;
+  }
+
+
+  getPointerPosition(
+    event
+  );
+
+
+  raycaster.setFromCamera(
+    pointer,
+    camera
+  );
+
+
+  const objects = [];
+
+
+  planetGroups.forEach(
+    group => {
+
+      group.children.forEach(
+        child => {
+
+          objects.push(
+            child
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+  const hits =
+    raycaster.intersectObjects(
+      objects,
+      false
+    );
+
+
+  if (
+    !hits.length
+  ) {
+    return;
+  }
+
+
+  const object =
+    hits[0].object;
+
+
+  let memoryId =
+    object.userData.memoryId;
+
+
+  if (
+    !memoryId &&
+    object.parent
+  ) {
+
+    memoryId =
+      object.parent
+        .userData
+        .memoryId;
+
+  }
+
+
+  if (
+    !memoryId
+  ) {
+    return;
+  }
+
+
+  openMemory(
+    memoryId
+  );
+
+}
+
+
+/* =====================================================
+   POINTER EVENTS
+====================================================== */
+
+renderer.domElement.addEventListener(
+  "pointerdown",
+  () => {
+
+    pointerDown =
+      true;
+
+  }
+);
+
+
+renderer.domElement.addEventListener(
+  "pointerup",
+  event => {
+
+    if (!pointerDown) {
+      return;
+    }
+
+
+    pointerDown =
+      false;
+
+
+    selectPlanet(
+      event
+    );
+
+  }
+);
+
+
+/* =====================================================
+   CAMERA
+====================================================== */
+
+const cameraTarget =
+  new THREE.Vector3(
+    0,
+    0,
+    0
+  );
+
+
+let targetMouseX =
+  0;
+
+
+let targetMouseY =
+  0;
+
+
+let baseCameraX =
+  0;
+
+
+let baseCameraY =
+  6;
+
+
+/* =====================================================
+   CAMERA FLY
+====================================================== */
+
+function flyToPlanet(
+  group
+) {
+
+  cameraMoving =
+    true;
+
+
+  const planetPosition =
+    group.position.clone();
+
+
+  const direction =
+    camera.position
+      .clone()
+      .sub(
+        planetPosition
+      )
+      .normalize();
+
+
+  const destination =
+    planetPosition
+      .clone()
+      .add(
+        direction.multiplyScalar(
+          3.7
+        )
+      );
+
+
+  destination.y += .8;
+
+
+  gsap.killTweensOf(
+    camera.position
+  );
+
+
+  gsap.killTweensOf(
+    cameraTarget
+  );
+
+
+  gsap.to(
+    camera.position,
+    {
+
+      x:
+        destination.x,
+
+      y:
+        destination.y,
+
+      z:
+        destination.z,
+
+      duration:
+        1.45,
+
+      ease:
+        "power3.inOut"
+
+    }
+  );
+
+
+  gsap.to(
+    cameraTarget,
+    {
+
+      x:
+        planetPosition.x,
+
+      y:
+        planetPosition.y,
+
+      z:
+        planetPosition.z,
+
+      duration:
+        1.45,
+
+      ease:
+        "power3.inOut",
+
+      onComplete: () => {
+
+        cameraMoving =
+          false;
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   CAMERA RESET
+====================================================== */
+
+function resetCamera() {
+
+  cameraMoving =
+    true;
+
+
+  baseCameraX =
+    0;
+
+
+  baseCameraY =
+    6;
+
+
+  gsap.to(
+    camera.position,
+    {
+
+      x:
+        0,
+
+      y:
+        6,
+
+      z:
+        32,
+
+      duration:
+        1.4,
+
+      ease:
+        "power3.inOut"
+
+    }
+  );
+
+
+  gsap.to(
+    cameraTarget,
+    {
+
+      x:
+        0,
+
+      y:
+        0,
+
+      z:
+        0,
+
+      duration:
+        1.4,
+
+      ease:
+        "power3.inOut",
+
+      onComplete: () => {
+
+        cameraMoving =
+          false;
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   OPEN MEMORY
+====================================================== */
+
+function openMemory(
+  id
+) {
+
+  const group =
+    planetGroups.find(
+      g =>
+        g.userData.memory.id ===
+        id
+    );
+
+
+  if (!group) {
+    return;
+  }
+
+
+  currentMemory =
+    id;
+
+
+  galaxyActive =
+    false;
+
+
+  flyToPlanet(
+    group
+  );
+
+
+  gsap.to(
+    "#hud",
+    {
+
+      opacity:
+        0,
+
+      duration:
+        .5
+
+    }
+  );
+
+
+  document
+    .querySelectorAll(
+      ".memory-label"
+    )
+    .forEach(
+      label => {
+
+        label.style.opacity =
+          "0";
+
+      }
+    );
+
+
+  gsap.delayedCall(
+    1.35,
+    () => {
+
+      const screen =
+        document.getElementById(
+          `memory${id}`
+        );
+
+
+      if (!screen) {
+        return;
+      }
+
+
+      screen.style.display =
+        "flex";
+
+
+      gsap.fromTo(
+
+        screen,
+
+        {
+          opacity:
+            0
+        },
+
+        {
+          opacity:
+            1,
+
+          duration:
+            .7,
+
+          ease:
+            "power2.out"
+
+        }
+
+      );
+
+
+      const content =
+        screen.querySelector(
+          ".memory-content"
+        );
+
+
+      gsap.fromTo(
+
+        content,
+
+        {
+
+          y:
+            35,
+
+          scale:
+            .97
+
+        },
+
+        {
+
+          y:
+            0,
+
+          scale:
+            1,
+
+          duration:
+            .8,
+
+          ease:
+            "power3.out"
+
+        }
+
+      );
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   CLOSE MEMORY
+====================================================== */
+
+function closeMemory() {
+
+  if (
+    currentMemory === null
+  ) {
+    return;
+  }
+
+
+  const screen =
+    document.getElementById(
+      `memory${currentMemory}`
+    );
+
+
+  if (!screen) {
+    return;
+  }
+
+
+  gsap.to(
+    screen,
+    {
+
+      opacity:
+        0,
+
+      duration:
+        .5,
+
+      onComplete: () => {
+
+        screen.style.display =
+          "none";
+
+
+        screen.style.opacity =
+          "";
+
+
+        currentMemory =
+          null;
+
+
+        resetCamera();
+
+
+        galaxyActive =
+          true;
+
+
+        gsap.to(
+          "#hud",
+          {
+
+            opacity:
+              1,
+
+            duration:
+              .7,
+
+            delay:
+              .5
+
+          }
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   MEMORY BUTTONS
+====================================================== */
+
+document
+  .querySelectorAll(
+    ".memory-back"
+  )
+  .forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        closeMemory
+      );
+
+    }
+  );
+
+
+/* =====================================================
+   VIDEO
+====================================================== */
+
+const endingScreen =
+  document.getElementById(
+    "endingScreen"
+  );
+
+
+const endingVideo =
+  document.getElementById(
+    "endingVideo"
+  );
+
+
+const finishVideo =
+  document.getElementById(
+    "finishVideo"
+  );
+
+
+function showEnding() {
+
+  document
+    .querySelectorAll(
+      ".memory-screen"
+    )
+    .forEach(
+      screen => {
+
+        screen.style.display =
+          "none";
+
+      }
+    );
+
+
+  galaxyActive =
+    false;
+
+
+  endingScreen.style.display =
+    "flex";
+
+
+  gsap.fromTo(
+
+    endingScreen,
+
+    {
+
+      opacity:
+        0
+
+    },
+
+    {
+
+      opacity:
+        1,
+
+      duration:
+        .8
+
+    }
+
+  );
+
+
+  endingVideo.currentTime =
+    0;
+
+
+  const playPromise =
+    endingVideo.play();
+
+
+  if (
+    playPromise
+  ) {
+
+    playPromise.catch(
+      error => {
+
+        console.log(
+          "Video autoplay prevented:",
+          error
+        );
+
+      }
+    );
+
+  }
+
+}
+
+
+finishVideo.addEventListener(
+  "click",
+  showFinal
+);
+
+
+endingVideo.addEventListener(
+  "ended",
+  showFinal
+);
+
+
+/* =====================================================
+   FINAL SCREEN
+====================================================== */
+
+function showFinal() {
+
+  endingScreen.style.display =
+    "none";
+
+
+  endingVideo.pause();
+
+
+  const finalScreen =
+    document.getElementById(
+      "finalScreen"
+    );
+
+
+  finalScreen.style.display =
+    "flex";
+
+
+  gsap.fromTo(
+
+    finalScreen,
+
+    {
+
+      opacity:
+        0
+
+    },
+
+    {
+
+      opacity:
+        1,
+
+      duration:
+        1.5
+
+    }
+
+  );
+
+
+  const finalContent =
+    finalScreen.children[0];
+
+
+  gsap.fromTo(
+
+    finalContent,
+
+    {
+
+      scale:
+        .85,
+
+      opacity:
+        0
+
+    },
+
+    {
+
+      scale:
+        1,
+
+      opacity:
+        1,
+
+      duration:
+        1.5,
+
+      ease:
+        "power3.out"
+
+    }
+
+  );
+
+}
+
+
+/* =====================================================
+   INTRO
+====================================================== */
+
+const intro =
+  document.getElementById(
+    "intro"
+  );
+
+
+const enterBtn =
+  document.getElementById(
+    "enterBtn"
+  );
+
+
+function enterUniverse() {
+
+  galaxyActive =
+    true;
+
+
+  gsap.to(
+
+    intro,
+
+    {
+
+      opacity:
+        0,
+
+      duration:
+        1.1,
+
+      ease:
+        "power2.inOut",
+
+      onComplete: () => {
+
+        intro.style.display =
+          "none";
+
+
+        gsap.to(
+          "#hud",
+          {
+
+            opacity:
+              1,
+
+            duration:
+              1.2
+
+          }
+        );
+
+
+        camera.position.set(
+          0,
+          0,
+          65
+        );
+
+
+        cameraTarget.set(
+          0,
+          0,
+          0
+        );
+
+
+        cameraMoving =
+          true;
+
+
+        gsap.to(
+
+          camera.position,
+
+          {
+
+            x:
+              0,
+
+            y:
+              6,
+
+            z:
+              32,
+
+            duration:
+              3.2,
+
+            ease:
+              "power3.inOut",
+
+            onComplete: () => {
+
+              cameraMoving =
+                false;
+
+            }
+
+          }
+
+        );
+
+      }
+
+    }
+
+  );
+
+}
+
+
+enterBtn.addEventListener(
+  "click",
+  enterUniverse
+);
+
+
+/* =====================================================
+   PARALLAX
+====================================================== */
+
+window.addEventListener(
+  "pointermove",
+  event => {
+
+    targetMouseX =
+      (
+        event.clientX /
+        window.innerWidth
+      ) -
+      .5;
+
+
+    targetMouseY =
+      (
+        event.clientY /
+        window.innerHeight
+      ) -
+      .5;
+
+  }
+);
+
+
+/* =====================================================
+   LABEL POSITIONING
+====================================================== */
+
+function updateLabels() {
+
+  if (
+    !galaxyActive
+  ) {
+    return;
+  }
+
+
+  planetGroups.forEach(
+    group => {
+
+      const memory =
+        group.userData.memory;
+
+
+      const label =
+        document.querySelector(
+          `.memory-label[data-id="${memory.id}"]`
+        );
+
+
+      if (!label) {
+        return;
+      }
+
+
+      const position =
+        group.position.clone();
+
+
+      position.y +=
+        memory.size +
+        .7;
+
+
+      const projected =
+        position.project(
+          camera
+        );
+
+
+      const x =
+        (
+          projected.x *
+          .5 +
+          .5
+        ) *
+        window.innerWidth;
+
+
+      const y =
+        (
+          -projected.y *
+          .5 +
+          .5
+        ) *
+        window.innerHeight;
+
+
+      const visible =
+        projected.z > -1 &&
+        projected.z < 1 &&
+        x > -50 &&
+        x <
+          window.innerWidth +
+          50 &&
+        y > -50 &&
+        y <
+          window.innerHeight +
+          50;
+
+
+      label.style.left =
+        `${x}px`;
+
+
+      label.style.top =
+        `${y}px`;
+
+
+      label.style.opacity =
+        visible
+          ? ".72"
+          : "0";
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   ANIMATION
+====================================================== */
+
+const clock =
+  new THREE.Clock();
+
+
+function animate() {
+
+  requestAnimationFrame(
+    animate
+  );
+
+
+  const elapsed =
+    clock.getElapsedTime();
+
+
+  /* Galaxy rotation */
+
+  galaxy.rotation.y =
+    elapsed *
+    .012;
+
+
+  dust.rotation.y =
+    -elapsed *
+    .006;
+
+
+  starField.rotation.y =
+    elapsed *
+    .002;
+
+
+  /* Core */
+
+  coreGroup.scale.setScalar(
+
+    1 +
+    Math.sin(
+      elapsed *
+      1.7
+    ) *
+    .035
+
+  );
+
+
+  glow.scale.setScalar(
+
+    10 +
+    Math.sin(
+      elapsed *
+      1.3
+    ) *
+    .5
+
+  );
+
+
+  /* Planets */
+
+  planetGroups.forEach(
+    (
+      group,
+      index
+    ) => {
+
+      group.rotation.y +=
+        .0025 +
+        index *
+        .0003;
+
+
+      group.rotation.z =
+        Math.sin(
+          elapsed *
+          .5 +
+          index
+        ) *
+        .05;
+
+    }
+  );
+
+
+  /*
+     IMPORTANT FIX:
+
+     Only apply mouse parallax when the camera
+     is NOT performing a cinematic movement.
+
+     This prevents parallax from fighting
+     the fly-to-planet animation.
+  */
+
+  if (
+    galaxyActive &&
+    !cameraMoving
+  ) {
+
+    const desiredX =
+      targetMouseX *
+      1.3;
+
+
+    const desiredY =
+      6 -
+      targetMouseY;
+
+
+    camera.position.x +=
+      (
+        desiredX -
+        camera.position.x
+      ) *
+      .006;
+
+
+    camera.position.y +=
+      (
+        desiredY -
+        camera.position.y
+      ) *
+      .006;
+
+  }
+
+
+  camera.lookAt(
+    cameraTarget
+  );
+
+
+  updateLabels();
+
+
+  /*
+     IMPORTANT FIX:
+
+     Always render the scene.
+
+     Previously the renderer only ran when
+     galaxyActive was true, which could leave
+     the canvas visually frozen.
+  */
+
+  composer.render();
+
+}
+
+
+animate();
+
+
+/* =====================================================
+   SHOOTING STAR START
+====================================================== */
+
+shootingStarLoop();
+
+
+/* =====================================================
+   RESIZE
+====================================================== */
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    camera.aspect =
+      window.innerWidth /
+      window.innerHeight;
+
+
+    camera.updateProjectionMatrix();
+
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+
+    renderer.setPixelRatio(
+
+      Math.min(
+        window.devicePixelRatio || 1,
+        1.5
+      )
+
+    );
+
+
+    composer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+
+    bloomPass.resolution.set(
+
+      window.innerWidth,
+      window.innerHeight
+
+    );
+
+  }
+);
+
+
+/* =====================================================
+   STARTUP COMPLETE
+====================================================== */
+
+/*
+   The module successfully initialized.
+
+   Now we can safely remove the loading screen.
+*/
+
+requestAnimationFrame(() => {
+
+  const loading =
+    document.getElementById(
+      "loading"
+    );
+
+
+  if (!loading) {
+    return;
+  }
+
+
+  gsap.to(
+
+    loading,
+
+    {
+
+      opacity:
+        0,
+
+      duration:
+        .8,
+
+      ease:
+        "power2.out",
+
+      onComplete: () => {
+
+        loading.style.display =
+          "none";
+
+      }
+
+    }
+
+  );
+
+});
+
+</script>
+
+</body>
+</html>
