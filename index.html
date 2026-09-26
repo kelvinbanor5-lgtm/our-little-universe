@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For Nova ❤️</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: #050509;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .screen {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 30px 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    .screen.active {
+      display: flex;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 10vw, 5rem);
+      margin-bottom: 15px;
+    }
+
+    p {
+      max-width: 650px;
+      line-height: 1.7;
+      color: #d7d7df;
+      font-size: 1rem;
+    }
+
+    button {
+      margin-top: 30px;
+      padding: 13px 25px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 30px;
+      background: rgba(255,255,255,.08);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: .3s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: rgba(255,255,255,.15);
+    }
+
+    /* Stars */
+    .stars {
+      width: min(500px, 90vw);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      margin-top: 40px;
+    }
+
+    .star {
+      width: 80px;
+      height: 80px;
+      margin: auto;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      cursor: pointer;
+      background: radial-gradient(circle, #fff 0%, #aaa 15%, transparent 65%);
+      filter: drop-shadow(0 0 15px rgba(255,255,255,.8));
+      transition: .3s;
+    }
+
+    .star:hover {
+      transform: scale(1.2);
+    }
+
+    .star.used {
+      opacity: .35;
+      pointer-events: none;
+    }
+
+    /* Memory cards */
+    .memory {
+      width: min(420px, 90vw);
+    }
+
+    .memory img {
+      width: 100%;
+      max-height: 55vh;
+      object-fit: cover;
+      border-radius: 20px;
+      margin-top: 25px;
+      box-shadow: 0 15px 50px rgba(0,0,0,.5);
+    }
+
+    /* Custom stars */
+    .special {
+      font-size: 5rem;
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 25px rgba(255,255,255,.8));
+    }
+
+    /* Ending video */
+    .video-container {
+      width: min(900px, 95vw);
+    }
+
+    video {
+      width: 100%;
+      max-height: 75vh;
+      border-radius: 18px;
+      background: black;
+      box-shadow: 0 20px 70px rgba(0,0,0,.7);
+    }
+
+    /* Floating particles */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      animation: floatUp linear forwards;
+      opacity: .8;
+      z-index: 0;
+    }
+
+    @keyframes floatUp {
+      from {
+        transform: translateY(100vh);
+        opacity: 0;
+      }
+      20% {
+        opacity: .8;
+      }
+      to {
+        transform: translateY(-10vh);
+        opacity: 0;
+      }
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .final {
+      background:
+        radial-gradient(circle at center, #191329 0%, #050509 65%);
+    }
+
+    .final h1 {
+      letter-spacing: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- INTRO -->
+  <section id="intro" class="screen active">
+    <div class="content">
+      <div class="special">✦</div>
+      <h1>For Nova</h1>
+      <p>
+        Some memories deserve more than just a place in your camera roll.
+        So I made this little universe for ours.
+      </p>
+      <button onclick="showScreen('stars')">Enter ✨</button>
+    </div>
+  </section>
+
+
+  <!-- STAR SELECTOR -->
+  <section id="stars" class="screen">
+    <div class="content">
+      <h1>Our Little Universe</h1>
+      <p>Six stars. Six moments.</p>
+
+      <div class="stars">
+
+        <!-- STAR 1 -->
+        <div class="star" onclick="openStar(1, this)">★</div>
+
+        <!-- STAR 2 -->
+        <div class="star" onclick="openStar(2, this)">★</div>
+
+        <!-- STAR 3 -->
+        <div class="star" onclick="openStar(3, this)">★</div>
+
+        <!-- STAR 4 -->
+        <div class="star" onclick="openStar(4, this)">★</div>
+
+        <!-- STAR 5 -->
+        <div class="star" onclick="openStar(5, this)">★</div>
+
+        <!-- STAR 6 -->
+        <div class="star" onclick="openStar(6, this)">★</div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- MEMORY DISPLAY -->
+  <section id="memory" class="screen">
+    <div class="content memory">
+
+      <h1 id="memoryTitle"></h1>
+
+      <div id="memoryContent"></div>
+
+      <p id="memoryText"></p>
+
+      <button onclick="backToStars()">Back to the stars</button>
+
+    </div>
+  </section>
+
+
+  <!-- ENDING -->
+  <section id="ending" class="screen">
+    <div class="content video-container">
+
+      <h1>And this is only the beginning...</h1>
+
+      <video id="endingVideo" controls playsinline>
+        <source src="ending.mov" type="video/quicktime">
+        Your browser does not support this video.
+      </video>
+
+      <button onclick="showScreen('final')">
+        Continue ❤️
+      </button>
+
+    </div>
+  </section>
+
+
+  <!-- FINAL -->
+  <section id="final" class="screen final">
+    <div class="content">
+      <div class="special">❤️</div>
+
+      <h1>NOVA</h1>
+
+      <p>
+        No matter how many memories we make,
+        I'll always be grateful for the ones that started it all.
+      </p>
+
+      <button onclick="showScreen('intro')">
+        Replay ✨
+      </button>
+    </div>
+  </section>
+
+
+  <script>
+
+    let starsOpened = 0;
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(screen => {
+        screen.classList.remove("active");
+      });
+
+      document.getElementById(id).classList.add("active");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+
+    function openStar(number, element) {
+
+      element.classList.add("used");
+      starsOpened++;
+
+      const title = document.getElementById("memoryTitle");
+      const content = document.getElementById("memoryContent");
+      const text = document.getElementById("memoryText");
+
+      content.innerHTML = "";
+
+      /*
+        STAR 1
+        Custom experience — NO PHOTO
+      */
+      if (number === 1) {
+
+        title.textContent = "The Beginning";
+
+        content.innerHTML = `
+          <div class="special">✦</div>
+        `;
+
+        text.textContent =
+          "Every story has a beginning. Ours became something I'll always remember.";
+      }
+
+
+      /*
+        STAR 2
+        Custom experience — NO PHOTO
+      */
+      if (number === 2) {
+
+        title.textContent = "That Day";
+
+        content.innerHTML = `
+          <div class="special">🌙</div>
+        `;
+
+        text.textContent =
+          "One ordinary moment can become one of your favorite memories.";
+      }
+
+
+      /*
+        STAR 3
+        YOUR SMILE
+        FILE: smile.jpg
+      */
+      if (number === 3) {
+
+        title.textContent = "Your Smile";
+
+        content.innerHTML = `
+          <img src="Smile.JPG" alt="Your Smile">
+        `;
+
+        text.textContent =
+          "There is something about your smile that makes everything feel a little lighter.";
+      }
+
+
+      /*
+        STAR 4
+        OUR CALLS
+        FILE: calls.jpeg
+      */
+      if (number === 4) {
+
+        title.textContent = "Our Calls";
+
+        content.innerHTML = `
+          <img src="calls.jpeg" alt="Our Calls">
+        `;
+
+        text.textContent =
+          "The conversations, the laughs, the random moments — somehow even the simplest calls became memories.";
+      }
+
+
+      /*
+        STAR 5
+        RANDOM MEMORY
+        FILE: memory.jpg
+      */
+      if (number === 5) {
+
+        title.textContent = "Random Memory";
+
+        content.innerHTML = `
+          <img src="memory.jpg" alt="Random Memory">
+        `;
+
+        text.textContent =
+          "Sometimes the random moments end up being the ones you remember the most.";
+      }
+
+
+      /*
+        STAR 6
+        Custom experience — NO PHOTO
+      */
+      if (number === 6) {
+
+        title.textContent = "Forever";
+
+        content.innerHTML = `
+          <div class="special">∞</div>
+        `;
+
+        text.textContent =
+          "Whatever the future looks like, I'm glad our story exists.";
+      }
+
+      showScreen("memory");
+
+      /*
+        When all six stars have been opened,
+        show the ending after returning to the stars.
+      */
+    }
+
+
+    function backToStars() {
+
+      if (starsOpened >= 6) {
+
+        setTimeout(() => {
+          showScreen("ending");
+        }, 300);
+
+      } else {
+
+        showScreen("stars");
+
+      }
+    }
+
+
+    /*
+      Floating hearts and stars
+    */
+
+    function createParticle() {
+
+      const particle = document.createElement("div");
+
+      particle.className = "particle";
+
+      const symbols = ["✦", "⋆", "♡", "✨"];
+
+      particle.textContent =
+        symbols[Math.floor(Math.random() * symbols.length)];
+
+      particle.style.left =
+        Math.random() * 100 + "vw";
+
+      particle.style.fontSize =
+        (Math.random() * 15 + 10) + "px";
+
+      particle.style.animationDuration =
+        (Math.random() * 6 + 5) + "s";
+
+      document.body.appendChild(particle);
+
+      setTimeout(() => {
+        particle.remove();
+      }, 11000);
+    }
+
+    setInterval(createParticle, 700);
+
+  </script>
+
+</body>
+</html>
